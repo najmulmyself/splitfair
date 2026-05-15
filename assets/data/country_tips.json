@@ -1,0 +1,22 @@
+[
+  {"country": "United States", "flag": "🇺🇸", "typical": "15–20%", "note": "Tipping is standard and expected for table service."},
+  {"country": "United Kingdom", "flag": "🇬🇧", "typical": "10–15%", "note": "Often included as 'optional service charge' on the bill."},
+  {"country": "Canada", "flag": "🇨🇦", "typical": "15–20%", "note": "Similar to the US. 15% is the minimum for good service."},
+  {"country": "Australia", "flag": "🇦🇺", "typical": "0–10%", "note": "Tipping is not obligatory. Round up or leave 10% for excellent service."},
+  {"country": "Japan", "flag": "🇯🇵", "typical": "0%", "note": "Tipping is considered rude. Service charge is included."},
+  {"country": "France", "flag": "🇫🇷", "typical": "5–10%", "note": "Service is included by law (service compris). Extra tip is appreciated."},
+  {"country": "Germany", "flag": "🇩🇪", "typical": "5–10%", "note": "Round up to the nearest euro or leave 5–10% for good service."},
+  {"country": "Italy", "flag": "🇮🇹", "typical": "0–10%", "note": "Coperto (cover charge) is common. Tipping is not required but appreciated."},
+  {"country": "Spain", "flag": "🇪🇸", "typical": "5–10%", "note": "Tipping is not mandatory but a few euros is a nice gesture."},
+  {"country": "China", "flag": "🇨🇳", "typical": "0%", "note": "Tipping is not customary and may be refused in mainland China."},
+  {"country": "India", "flag": "🇮🇳", "typical": "5–10%", "note": "10% is standard at restaurants. Check if service charge is already included."},
+  {"country": "Bangladesh", "flag": "🇧🇩", "typical": "5–10%", "note": "Tipping is appreciated at restaurants. BDT 50–200 is typical."},
+  {"country": "Singapore", "flag": "🇸🇬", "typical": "0%", "note": "10% service charge and 9% GST are added automatically."},
+  {"country": "UAE", "flag": "🇦🇪", "typical": "10–15%", "note": "Service charge is often included. Extra tip appreciated for great service."},
+  {"country": "Mexico", "flag": "🇲🇽", "typical": "10–15%", "note": "15% is standard for table service."},
+  {"country": "Brazil", "flag": "🇧🇷", "typical": "10%", "note": "10% service charge (taxa de serviço) is usually included."},
+  {"country": "South Korea", "flag": "🇰🇷", "typical": "0%", "note": "Tipping is not customary in South Korea."},
+  {"country": "Thailand", "flag": "🇹🇭", "typical": "0–10%", "note": "Rounding up is appreciated. Higher-end restaurants may expect 10%."},
+  {"country": "Turkey", "flag": "🇹🇷", "typical": "5–15%", "note": "10% is becoming more common in tourist areas."},
+  {"country": "Switzerland", "flag": "🇨🇭", "typical": "5–10%", "note": "Service is included but rounding up is customary."}
+]
