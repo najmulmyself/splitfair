@@ -1,14 +1,851 @@
-// Calculator screen — UI implementation pending.
-// This file is a scaffold placeholder.
-// See AMORTLY_REQUIREMENTS.md → Part 6.2 for the full implementation spec.
+import 'dart:convert';
+
+import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../core/router/app_router.dart';
+import '../../core/theme/app_colors.dart';
+import '../../core/utils/haptics.dart';
+import '../../data/models/currency.dart';
+import 'providers/calculator_provider.dart';
+import 'widgets/bill_card.dart';
+import 'widgets/numpad.dart';
+import 'widgets/people_row.dart';
+import 'widgets/result_section.dart';
+import 'widgets/tip_section.dart';
 
 /// The main bill-splitting calculator screen.
-/// Full UI implementation pending.
-class CalculatorScreen extends StatelessWidget {
+class CalculatorScreen extends ConsumerStatefulWidget {
   const CalculatorScreen({super.key});
 
   @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('Calculator')));
+  ConsumerState<CalculatorScreen> createState() => _CalculatorScreenState();
+}
+
+class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
+  String _billBuffer = '';
+  String _taxBuffer = '';
+  bool _isEditingBill = false;
+  bool _isEditingTax = false;
+  String? _activePersonId;
+
+  // Currency info loaded from assets
+  Currency _activeCurrency = const Currency(
+    code: 'USD',
+    symbol: '\$',
+    name: 'US Dollar',
+    flag: '🇺🇸',
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _loadActiveCurrency();
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
+  }
+
+  Future<void> _loadActiveCurrency() async {
+    try {
+      final json = await rootBundle.loadString('assets/data/currencies.json');
+      final list = (jsonDecode(json) as List)
+          .map((e) => Currency.fromJson(e as Map<String, dynamic>))
+          .toList();
+      final code = ref.read(calculatorNotifierProvider).currencyCode;
+      final match = list.firstWhere(
+        (c) => c.code == code,
+        orElse: () => _activeCurrency,
+      );
+      if (mounted) setState(() => _activeCurrency = match);
+    } catch (_) {
+      // Keep default USD
+    }
+  }
+
+  bool get _isEditing => _isEditingBill || _isEditingTax;
+
+  // ── Numpad input ──────────────────────────────────────────────
+
+  void _onNumpadKey(String key) {
+    Haptics.lightImpact();
+    setState(() {
+      if (_isEditingBill) {
+        _billBuffer = _applyKey(_billBuffer, key);
+        _commitBill();
+      } else if (_isEditingTax) {
+        _taxBuffer = _applyKey(_taxBuffer, key);
+        _commitTax();
+      }
+    });
+  }
+
+  void _onDone() {
+    Haptics.impact();
+    setState(() {
+      _isEditingBill = false;
+      _isEditingTax = false;
+    });
+  }
+
+  String _applyKey(String buffer, String key) {
+    if (key == '⌫') {
+      return buffer.isEmpty ? '' : buffer.substring(0, buffer.length - 1);
+    }
+    if (key == '.') {
+      if (buffer.contains('.')) return buffer;
+      return buffer.isEmpty ? '0.' : '$buffer.';
+    }
+    // Digit
+    if (buffer == '0') return key;
+    if (buffer.contains('.')) {
+      final dec = buffer.split('.')[1];
+      if (dec.length >= 2) return buffer;
+    } else {
+      if (buffer.length >= 6) return buffer;
+    }
+    return '$buffer$key';
+  }
+
+  void _commitBill() {
+    final value = _billBuffer.isEmpty
+        ? Decimal.zero
+        : Decimal.tryParse(_billBuffer) ?? Decimal.zero;
+    ref.read(calculatorNotifierProvider.notifier).setSubtotal(value);
+  }
+
+  void _commitTax() {
+    final raw = _taxBuffer.isEmpty ? '0' : _taxBuffer;
+    final input = Decimal.tryParse(raw) ?? Decimal.zero;
+    final state = ref.read(calculatorNotifierProvider);
+    Decimal taxAmount;
+    if (state.taxInputMode == TaxInputMode.percent) {
+      taxAmount = (state.subtotal * input / Decimal.fromInt(100))
+          .toDecimal(scaleOnInfinitePrecision: 2);
+    } else {
+      taxAmount = input;
+    }
+    ref.read(calculatorNotifierProvider.notifier).setTax(taxAmount);
+  }
+
+  // ── People ────────────────────────────────────────────────────
+
+  Future<void> _showAddPersonDialog() async {
+    Haptics.impact();
+    final controller = TextEditingController();
+    final name = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _AddPersonSheet(controller: controller),
+    );
+    if (name != null && name.trim().isNotEmpty) {
+      ref.read(calculatorNotifierProvider.notifier).addPerson(name.trim());
+    }
+  }
+
+  void _onPersonLongPress(String personId) {
+    final people = ref.read(calculatorNotifierProvider).people;
+    if (people.length <= 1) return;
+    Haptics.heavyImpact();
+    final person = people.firstWhere((p) => p.id == personId);
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _RemovePersonSheet(
+        personName: person.name,
+        colorIndex: person.colorIndex,
+        onRemove: () {
+          ref.read(calculatorNotifierProvider.notifier).removePerson(personId);
+          if (_activePersonId == personId) {
+            setState(() => _activePersonId = null);
+          }
+          Navigator.pop(ctx);
+        },
+        onCancel: () => Navigator.pop(ctx),
+      ),
+    );
+  }
+
+  // ── Build ─────────────────────────────────────────────────────
+
+  @override
+  Widget build(BuildContext context) {
+    final calcState = ref.watch(calculatorNotifierProvider);
+    final notifier = ref.read(calculatorNotifierProvider.notifier);
+    final hasBill = calcState.subtotal > Decimal.zero;
+    final hasPeople = calcState.people.isNotEmpty;
+    final hasResults = notifier.hasValidInput && hasPeople;
+    final results = hasResults ? notifier.results : <dynamic>[];
+
+    return Scaffold(
+      backgroundColor: AppColors.bgBase,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            // ── App bar ────────────────────────────────────────
+            _CalcAppBar(
+              onHistory: () => context.push(AppRoutes.history),
+              onSettings: () => context.push(AppRoutes.settings),
+            ),
+
+            // ── Scrollable content ─────────────────────────────
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Bill card
+                    BillCard(
+                      billBuffer: _billBuffer,
+                      taxBuffer: _taxBuffer,
+                      isEditingBill: _isEditingBill,
+                      isEditingTax: _isEditingTax,
+                      taxMode: calcState.taxInputMode,
+                      currencyCode: _activeCurrency.code,
+                      currencyFlag: _activeCurrency.flag,
+                      onTap: () => setState(() {
+                        _isEditingBill = true;
+                        _isEditingTax = false;
+                      }),
+                      onTaxTap: () => setState(() {
+                        _isEditingTax = true;
+                        _isEditingBill = false;
+                      }),
+                      onTaxModeChanged: (mode) {
+                        notifier.setTaxMode(mode);
+                        _taxBuffer = '';
+                        notifier.setTax(Decimal.zero);
+                      },
+                    ).animate().fade(duration: 300.ms).slideY(
+                        begin: -0.05,
+                        end: 0,
+                        duration: 350.ms,
+                        curve: Curves.easeOut),
+
+                    const SizedBox(height: 14),
+
+                    // People row
+                    PeopleRow(
+                      people: calcState.people,
+                      activePersonId: _activePersonId,
+                      canRemove: calcState.people.length > 1,
+                      onAdd: _showAddPersonDialog,
+                      onSelect: (id) => setState(() => _activePersonId = id),
+                      onLongPress: _onPersonLongPress,
+                    ).animate().fade(duration: 300.ms, delay: 80.ms),
+
+                    // Tip section (visible when people added + not editing)
+                    if (!_isEditing && hasPeople) ...[
+                      const SizedBox(height: 14),
+                      TipSection(
+                        selectedTip: calcState.tipPercentage,
+                        tipOnSubtotal: calcState.tipOnSubtotal,
+                        onTipSelected: (tip) {
+                          notifier.setTipPercentage(tip);
+                          Haptics.selection();
+                        },
+                        onToggleTipBase: (val) {
+                          notifier.setTipOnSubtotal(val);
+                          Haptics.selection();
+                        },
+                      ).animate().fade(duration: 280.ms).slideY(
+                          begin: 0.08,
+                          end: 0,
+                          duration: 300.ms,
+                          curve: Curves.easeOut),
+                    ],
+
+                    // Result section
+                    if (!_isEditing && hasResults) ...[
+                      const SizedBox(height: 14),
+                      ResultSection(
+                        results: notifier.results,
+                        grandTotal: notifier.grandTotal,
+                        tip: notifier.computedTip,
+                        currencyCode: calcState.currencyCode,
+                      ),
+                    ],
+
+                    // Hint text when no people yet
+                    if (!_isEditing && !hasPeople) ...[
+                      const SizedBox(height: 16),
+                      _HintCard(),
+                    ],
+
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+            ),
+
+            // ── Bottom: numpad or action button ────────────────
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 260),
+              switchInCurve: Curves.easeOut,
+              switchOutCurve: Curves.easeIn,
+              transitionBuilder: (child, anim) => SlideTransition(
+                position:
+                    Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+                        .animate(anim),
+                child: FadeTransition(opacity: anim, child: child),
+              ),
+              child: _isEditing
+                  ? Numpad(
+                      key: const ValueKey('numpad'),
+                      onKey: _onNumpadKey,
+                      onDone: _onDone,
+                    )
+                  : _BottomBar(
+                      key: const ValueKey('bottom_bar'),
+                      hasResults: results.isNotEmpty,
+                      hasBill: hasBill,
+                      onShare: () => context.push(AppRoutes.share),
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── App bar ───────────────────────────────────────────────────────────────
+
+class _CalcAppBar extends StatelessWidget {
+  const _CalcAppBar({required this.onHistory, required this.onSettings});
+  final VoidCallback onHistory;
+  final VoidCallback onSettings;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 12, 4),
+      child: Row(
+        children: [
+          // Logo mark
+          _LogoMark(),
+          const SizedBox(width: 10),
+          const Text(
+            'SplitFair',
+            style: TextStyle(
+              fontFamily: '.SF Pro Display',
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const Spacer(),
+          _AppBarBtn(
+            icon: Icons.history_rounded,
+            onTap: onHistory,
+          ),
+          const SizedBox(width: 4),
+          _AppBarBtn(
+            icon: Icons.settings_rounded,
+            onTap: onSettings,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AppBarBtn extends StatelessWidget {
+  const _AppBarBtn({required this.icon, required this.onTap});
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 38,
+        height: 38,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: AppColors.surface1,
+          border: Border.all(color: AppColors.borderDefault),
+        ),
+        child: Icon(icon, color: AppColors.textSecondary, size: 18),
+      ),
+    );
+  }
+}
+
+// ── Mini logo mark for app bar ────────────────────────────────────────────
+
+class _LogoMark extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    const size = 34.0;
+    const overlap = 10.0;
+    return SizedBox(
+      width: size * 2 - overlap,
+      height: size,
+      child: Stack(
+        children: [
+          Positioned(
+            left: 0,
+            child: _Circle(
+              label: 'S',
+              gradient: const LinearGradient(
+                colors: [Color(0xFF9B7FFF), Color(0xFF6A3FE0)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              size: size,
+            ),
+          ),
+          Positioned(
+            right: 0,
+            child: _Circle(
+              label: 'F',
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFF6B9D), Color(0xFFFF9F43)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              size: size,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Circle extends StatelessWidget {
+  const _Circle(
+      {required this.label, required this.gradient, required this.size});
+  final String label;
+  final LinearGradient gradient;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: gradient,
+      ),
+      child: Center(
+        child: Text(
+          label,
+          style: TextStyle(
+            fontFamily: '.SF Pro Display',
+            fontSize: size * 0.42,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+            height: 1,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Hint card ─────────────────────────────────────────────────────────────
+
+class _HintCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      decoration: BoxDecoration(
+        color: AppColors.surface1.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.primaryViolet.withOpacity(0.2),
+          style: BorderStyle.solid,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.add_circle_outline_rounded,
+              color: AppColors.primaryViolet.withOpacity(0.6), size: 18),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Text(
+              "Tap a number, then add who's at the table.\nWe'll handle the math.",
+              style: TextStyle(
+                fontFamily: '.SF Pro Text',
+                fontSize: 14,
+                height: 1.5,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    ).animate().fade(duration: 350.ms, delay: 150.ms);
+  }
+}
+
+// ── Bottom bar ────────────────────────────────────────────────────────────
+
+class _BottomBar extends StatelessWidget {
+  const _BottomBar({
+    super.key,
+    required this.hasResults,
+    required this.hasBill,
+    required this.onShare,
+  });
+  final bool hasResults;
+  final bool hasBill;
+  final VoidCallback onShare;
+
+  @override
+  Widget build(BuildContext context) {
+    final bottom = MediaQuery.of(context).padding.bottom;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16, 10, 16, bottom + 12),
+      child: SizedBox(
+        width: double.infinity,
+        height: 54,
+        child: hasResults
+            ? _ShareButton(onTap: onShare)
+            : _DisabledButton(hasBill: hasBill),
+      ),
+    );
+  }
+}
+
+class _ShareButton extends StatelessWidget {
+  const _ShareButton({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFFFF6B9D), Color(0xFFFF9F43)],
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFFF6B9D).withOpacity(0.35),
+              blurRadius: 20,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.ios_share_rounded, color: Colors.white, size: 18),
+            SizedBox(width: 8),
+            Text(
+              'Share Results',
+              style: TextStyle(
+                fontFamily: '.SF Pro Display',
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DisabledButton extends StatelessWidget {
+  const _DisabledButton({required this.hasBill});
+  final bool hasBill;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface1,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.borderDefault),
+      ),
+      child: Center(
+        child: Text(
+          hasBill ? 'Add people to continue' : 'Enter a bill to continue',
+          style: const TextStyle(
+            fontFamily: '.SF Pro Text',
+            fontSize: 15,
+            fontWeight: FontWeight.w400,
+            color: AppColors.textTertiary,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Add person bottom sheet ───────────────────────────────────────────────
+
+// ignore: unused_element
+class _AddPersonSheet extends StatefulWidget {
+  const _AddPersonSheet({required this.controller});
+  final TextEditingController controller;
+
+  @override
+  State<_AddPersonSheet> createState() => _AddPersonSheetState();
+}
+
+class _AddPersonSheetState extends State<_AddPersonSheet> {
+  @override
+  Widget build(BuildContext context) {
+    final bottom = MediaQuery.of(context).viewInsets.bottom;
+    return Container(
+      padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + bottom),
+      decoration: const BoxDecoration(
+        color: AppColors.surface1,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Handle
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.borderDefault,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            "Who's at the table?",
+            style: TextStyle(
+              fontFamily: '.SF Pro Display',
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            controller: widget.controller,
+            autofocus: true,
+            textCapitalization: TextCapitalization.words,
+            maxLength: 20,
+            style: const TextStyle(
+              fontFamily: '.SF Pro Text',
+              fontSize: 16,
+              color: AppColors.textPrimary,
+            ),
+            decoration: InputDecoration(
+              hintText: 'Enter a name',
+              hintStyle: const TextStyle(color: AppColors.textTertiary),
+              filled: true,
+              fillColor: AppColors.surface2,
+              counterText: '',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                    color: AppColors.primaryViolet, width: 1.5),
+              ),
+            ),
+            onSubmitted: (value) {
+              if (value.trim().isNotEmpty) {
+                Navigator.pop(context, value.trim());
+              }
+            },
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              onPressed: () {
+                final name = widget.controller.text.trim();
+                if (name.isNotEmpty) Navigator.pop(context, name);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryViolet,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+                elevation: 0,
+              ),
+              child: const Text(
+                'Add Person',
+                style: TextStyle(
+                  fontFamily: '.SF Pro Display',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Remove person iOS-style action sheet ─────────────────────────────────
+
+class _RemovePersonSheet extends StatelessWidget {
+  const _RemovePersonSheet({
+    required this.personName,
+    required this.colorIndex,
+    required this.onRemove,
+    required this.onCancel,
+  });
+
+  final String personName;
+  final int colorIndex;
+  final VoidCallback onRemove;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final bottom = MediaQuery.of(context).padding.bottom;
+    final gradients = AppColors.personGradients;
+    final gradient = gradients[colorIndex % gradients.length];
+    final initial = personName.isNotEmpty ? personName[0].toUpperCase() : '?';
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(12, 0, 12, bottom + 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // ── Main action card ─────────────────────────────────
+          Container(
+            decoration: BoxDecoration(
+              color: AppColors.surface1,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppColors.borderDefault),
+            ),
+            clipBehavior: Clip.hardEdge,
+            child: Column(
+              children: [
+                // Person info header
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 46,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            colors: [gradient[0], gradient[1]],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            initial,
+                            style: const TextStyle(
+                              fontFamily: '.SF Pro Display',
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              height: 1,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          personName,
+                          style: const TextStyle(
+                            fontFamily: '.SF Pro Display',
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Divider
+                Container(height: 1, color: AppColors.borderDefault),
+
+                // Remove button
+                GestureDetector(
+                  onTap: onRemove,
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.person_remove_rounded,
+                          color: AppColors.coralPink,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Remove from split',
+                          style: TextStyle(
+                            fontFamily: '.SF Pro Text',
+                            fontSize: 17,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.coralPink,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          // ── Cancel button ─────────────────────────────────────
+          GestureDetector(
+            onTap: onCancel,
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 18),
+              decoration: BoxDecoration(
+                color: AppColors.surface1,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: AppColors.borderDefault),
+              ),
+              child: const Center(
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(
+                    fontFamily: '.SF Pro Text',
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

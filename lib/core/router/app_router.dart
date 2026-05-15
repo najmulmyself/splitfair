@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../features/calculator/calculator_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
 import '../../features/onboarding/onboarding_provider.dart';
 
@@ -38,8 +39,7 @@ GoRouter appRouter(AppRouterRef ref) {
       GoRoute(
         path: AppRoutes.calculator,
         name: 'calculator',
-        builder: (context, state) =>
-            const _PlaceholderScreen(title: 'Calculator'),
+        builder: (context, state) => const CalculatorScreen(),
       ),
       GoRoute(
         path: AppRoutes.share,

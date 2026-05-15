@@ -47,6 +47,7 @@ dependencies:
 
   # ── UTILITIES ───────────────────────────────────────────────
   package_info_plus: ^9.0.1
+  uuid: ^4.5.1
 
 dev_dependencies:
   flutter_test:
