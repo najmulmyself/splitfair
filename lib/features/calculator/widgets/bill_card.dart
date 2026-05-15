@@ -13,9 +13,11 @@ class BillCard extends StatelessWidget {
     required this.isEditingTax,
     required this.taxMode,
     required this.currencyCode,
+    required this.currencySymbol,
     required this.currencyFlag,
     required this.onTap,
     required this.onTaxTap,
+    required this.onCurrencyTap,
     required this.onTaxModeChanged,
   });
 
@@ -25,9 +27,11 @@ class BillCard extends StatelessWidget {
   final bool isEditingTax;
   final TaxInputMode taxMode;
   final String currencyCode;
+  final String currencySymbol;
   final String currencyFlag;
   final VoidCallback onTap;
   final VoidCallback onTaxTap;
+  final VoidCallback onCurrencyTap;
   final ValueChanged<TaxInputMode> onTaxModeChanged;
 
   @override
@@ -72,7 +76,11 @@ class BillCard extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                _CurrencyBadge(flag: currencyFlag, code: currencyCode),
+                _CurrencyBadge(
+                  flag: currencyFlag,
+                  code: currencyCode,
+                  onTap: onCurrencyTap,
+                ),
               ],
             ),
             const SizedBox(height: 10),
@@ -81,6 +89,7 @@ class BillCard extends StatelessWidget {
             _BillAmountDisplay(
               buffer: billBuffer,
               isEditing: isEditingBill,
+              currencySymbol: currencySymbol,
             ),
 
             const SizedBox(height: 12),
@@ -130,12 +139,12 @@ class BillCard extends StatelessWidget {
 
   String get _taxDisplay {
     if (taxBuffer.isEmpty || taxBuffer == '0') {
-      return taxMode == TaxInputMode.percent ? '0%' : '\$0';
+      return taxMode == TaxInputMode.percent ? '0%' : '${currencySymbol}0';
     }
     if (taxMode == TaxInputMode.percent) {
       return '$taxBuffer%';
     } else {
-      return '\$$taxBuffer';
+      return '$currencySymbol$taxBuffer';
     }
   }
 }
@@ -143,9 +152,14 @@ class BillCard extends StatelessWidget {
 // ── Amount display ────────────────────────────────────────────────────────
 
 class _BillAmountDisplay extends StatefulWidget {
-  const _BillAmountDisplay({required this.buffer, required this.isEditing});
+  const _BillAmountDisplay({
+    required this.buffer,
+    required this.isEditing,
+    required this.currencySymbol,
+  });
   final String buffer;
   final bool isEditing;
+  final String currencySymbol;
 
   @override
   State<_BillAmountDisplay> createState() => _BillAmountDisplayState();
@@ -206,10 +220,10 @@ class _BillAmountDisplayState extends State<_BillAmountDisplay>
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        // $ symbol
+        // Currency symbol
         Padding(
           padding: const EdgeInsets.only(bottom: 6),
-          child: Text('\$',
+          child: Text(widget.currencySymbol,
               style: isEmpty
                   ? symbolStyle.copyWith(
                       color: AppColors.textPrimary.withOpacity(0.18))
@@ -331,34 +345,42 @@ class _Pill extends StatelessWidget {
 // ── Currency badge ────────────────────────────────────────────────────────
 
 class _CurrencyBadge extends StatelessWidget {
-  const _CurrencyBadge({required this.flag, required this.code});
+  const _CurrencyBadge({
+    required this.flag,
+    required this.code,
+    required this.onTap,
+  });
   final String flag;
   final String code;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: AppColors.surface2,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.borderDefault),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(flag, style: const TextStyle(fontSize: 14)),
-          const SizedBox(width: 5),
-          Text(
-            code,
-            style: const TextStyle(
-              fontFamily: '.SF Pro Text',
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: AppColors.surface2,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.borderDefault),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(flag, style: const TextStyle(fontSize: 14)),
+            const SizedBox(width: 5),
+            Text(
+              code,
+              style: const TextStyle(
+                fontFamily: '.SF Pro Text',
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

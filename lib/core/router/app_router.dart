@@ -5,6 +5,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../features/calculator/calculator_screen.dart';
 import '../../features/onboarding/onboarding_screen.dart';
 import '../../features/onboarding/onboarding_provider.dart';
+import '../../features/share/share_sheet.dart';
+import '../../features/currency/currency_selector_sheet.dart';
+import '../../features/pro_unlock/pro_unlock_sheet.dart';
 
 part 'app_router.g.dart';
 
@@ -44,13 +47,12 @@ GoRouter appRouter(AppRouterRef ref) {
       GoRoute(
         path: AppRoutes.share,
         name: 'share',
-        builder: (context, state) => const _PlaceholderScreen(title: 'Share'),
+        builder: (context, state) => const ShareSheet(),
       ),
       GoRoute(
         path: AppRoutes.currency,
         name: 'currency',
-        builder: (context, state) =>
-            const _PlaceholderScreen(title: 'Currency'),
+        builder: (context, state) => const CurrencySelectorSheet(),
       ),
       GoRoute(
         path: AppRoutes.history,
@@ -65,8 +67,7 @@ GoRouter appRouter(AppRouterRef ref) {
       GoRoute(
         path: AppRoutes.proUnlock,
         name: 'proUnlock',
-        builder: (context, state) =>
-            const _PlaceholderScreen(title: 'Pro Unlock'),
+        builder: (context, state) => const ProUnlockSheet(),
       ),
       GoRoute(
         path: AppRoutes.settings,

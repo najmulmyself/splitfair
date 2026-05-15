@@ -12,12 +12,14 @@ class ResultSection extends StatelessWidget {
     required this.grandTotal,
     required this.tip,
     required this.currencyCode,
+    required this.currencySymbol,
   });
 
   final List<SplitResult> results;
   final Decimal grandTotal;
   final Decimal tip;
   final String currencyCode;
+  final String currencySymbol;
 
   @override
   Widget build(BuildContext context) {
@@ -49,6 +51,7 @@ class ResultSection extends StatelessWidget {
           total: grandTotal,
           tip: tip,
           avg: avg,
+          currencySymbol: currencySymbol,
         ),
 
         const SizedBox(height: 10),
@@ -59,7 +62,7 @@ class ResultSection extends StatelessWidget {
           final r = e.value;
           return Padding(
             padding: const EdgeInsets.only(bottom: 8),
-            child: _PersonResultCard(result: r)
+            child: _PersonResultCard(result: r, currencySymbol: currencySymbol)
                 .animate()
                 .fade(duration: 300.ms, delay: Duration(milliseconds: 80 * i))
                 .slideY(
@@ -83,25 +86,30 @@ class _SummaryRow extends StatelessWidget {
     required this.total,
     required this.tip,
     required this.avg,
+    required this.currencySymbol,
   });
 
   final Decimal total;
   final Decimal tip;
   final Decimal avg;
+  final String currencySymbol;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _SummaryItem(label: 'Total', value: '\$${total.toStringAsFixed(2)}'),
+        _SummaryItem(
+            label: 'Total',
+            value: '$currencySymbol${total.toStringAsFixed(2)}'),
         _divider(),
         _SummaryItem(
           label: 'Tip',
-          value: '+\$${tip.toStringAsFixed(2)}',
+          value: '+$currencySymbol${tip.toStringAsFixed(2)}',
           valueColor: AppColors.emeraldMint,
         ),
         _divider(),
-        _SummaryItem(label: 'Avg', value: '\$${avg.toStringAsFixed(2)}'),
+        _SummaryItem(
+            label: 'Avg', value: '$currencySymbol${avg.toStringAsFixed(2)}'),
       ],
     );
   }
@@ -155,8 +163,9 @@ class _SummaryItem extends StatelessWidget {
 // ── Person result card ────────────────────────────────────────────────────
 
 class _PersonResultCard extends StatelessWidget {
-  const _PersonResultCard({required this.result});
+  const _PersonResultCard({required this.result, required this.currencySymbol});
   final SplitResult result;
+  final String currencySymbol;
 
   @override
   Widget build(BuildContext context) {
@@ -256,7 +265,7 @@ class _PersonResultCard extends StatelessWidget {
 
           // Amount
           Text(
-            '\$${result.total.toStringAsFixed(2)}',
+            '$currencySymbol${result.total.toStringAsFixed(2)}',
             style: const TextStyle(
               fontFamily: 'AppFont',
               fontSize: 24,

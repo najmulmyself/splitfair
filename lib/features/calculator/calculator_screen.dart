@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -11,6 +9,8 @@ import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/haptics.dart';
 import '../../data/models/currency.dart';
+import '../../data/sources/currency_data_source.dart';
+import '../currency/currency_provider.dart';
 import 'providers/calculator_provider.dart';
 import 'widgets/bill_card.dart';
 import 'widgets/numpad.dart';
@@ -44,24 +44,23 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   @override
   void initState() {
     super.initState();
-    _loadActiveCurrency();
+    // Sync calculator currency from settings on first load
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final settingsCurrency = ref.read(currencyNotifierProvider);
+      ref
+          .read(calculatorNotifierProvider.notifier)
+          .setCurrency(settingsCurrency);
+      _loadActiveCurrencyByCode(settingsCurrency);
+    });
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
   }
 
-  Future<void> _loadActiveCurrency() async {
+  Future<void> _loadActiveCurrencyByCode(String code) async {
     try {
-      final json = await rootBundle.loadString('assets/data/currencies.json');
-      final list = (jsonDecode(json) as List)
-          .map((e) => Currency.fromJson(e as Map<String, dynamic>))
-          .toList();
-      final code = ref.read(calculatorNotifierProvider).currencyCode;
-      final match = list.firstWhere(
-        (c) => c.code == code,
-        orElse: () => _activeCurrency,
-      );
-      if (mounted) setState(() => _activeCurrency = match);
+      final match = await CurrencyDataSource.instance.findByCode(code);
+      if (mounted && match != null) setState(() => _activeCurrency = match);
     } catch (_) {
-      // Keep default USD
+      // Keep current
     }
   }
 
@@ -173,6 +172,11 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // React to currency changes (e.g. after returning from currency selector)
+    ref.listen<String>(currencyNotifierProvider, (prev, next) {
+      if (prev != next) _loadActiveCurrencyByCode(next);
+    });
+
     final calcState = ref.watch(calculatorNotifierProvider);
     final notifier = ref.read(calculatorNotifierProvider.notifier);
     final hasBill = calcState.subtotal > Decimal.zero;
@@ -207,6 +211,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                       isEditingTax: _isEditingTax,
                       taxMode: calcState.taxInputMode,
                       currencyCode: _activeCurrency.code,
+                      currencySymbol: _activeCurrency.symbol,
                       currencyFlag: _activeCurrency.flag,
                       onTap: () => setState(() {
                         _isEditingBill = true;
@@ -216,6 +221,10 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                         _isEditingTax = true;
                         _isEditingBill = false;
                       }),
+                      onCurrencyTap: () {
+                        Haptics.selection();
+                        context.push(AppRoutes.currency);
+                      },
                       onTaxModeChanged: (mode) {
                         notifier.setTaxMode(mode);
                         _taxBuffer = '';
@@ -268,6 +277,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                         grandTotal: notifier.grandTotal,
                         tip: notifier.computedTip,
                         currencyCode: calcState.currencyCode,
+                        currencySymbol: _activeCurrency.symbol,
                       ),
                     ],
 
