@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../features/onboarding/onboarding_screen.dart';
+import '../../features/onboarding/onboarding_provider.dart';
 
 part 'app_router.g.dart';
 
@@ -21,15 +23,17 @@ abstract class AppRoutes {
 /// The router redirects to onboarding if this is the first launch.
 @riverpod
 GoRouter appRouter(AppRouterRef ref) {
+  final onboardingComplete = ref.watch(onboardingNotifierProvider).isComplete;
+
   return GoRouter(
-    initialLocation: AppRoutes.calculator,
+    initialLocation:
+        onboardingComplete ? AppRoutes.calculator : AppRoutes.onboarding,
     debugLogDiagnostics: false,
     routes: [
       GoRoute(
         path: AppRoutes.onboarding,
         name: 'onboarding',
-        builder: (context, state) =>
-            const _PlaceholderScreen(title: 'Onboarding'),
+        builder: (context, state) => const OnboardingScreen(),
       ),
       GoRoute(
         path: AppRoutes.calculator,
@@ -40,8 +44,7 @@ GoRouter appRouter(AppRouterRef ref) {
       GoRoute(
         path: AppRoutes.share,
         name: 'share',
-        builder: (context, state) =>
-            const _PlaceholderScreen(title: 'Share'),
+        builder: (context, state) => const _PlaceholderScreen(title: 'Share'),
       ),
       GoRoute(
         path: AppRoutes.currency,
@@ -52,14 +55,12 @@ GoRouter appRouter(AppRouterRef ref) {
       GoRoute(
         path: AppRoutes.history,
         name: 'history',
-        builder: (context, state) =>
-            const _PlaceholderScreen(title: 'History'),
+        builder: (context, state) => const _PlaceholderScreen(title: 'History'),
       ),
       GoRoute(
         path: AppRoutes.receiptScanner,
         name: 'receiptScanner',
-        builder: (context, state) =>
-            const _PlaceholderScreen(title: 'Scanner'),
+        builder: (context, state) => const _PlaceholderScreen(title: 'Scanner'),
       ),
       GoRoute(
         path: AppRoutes.proUnlock,

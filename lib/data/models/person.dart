@@ -27,7 +27,7 @@ class Person extends HiveObject {
   @HiveField(3)
   final int shareWeight;
 
-  const Person({
+  Person({
     required this.id,
     required this.name,
     required this.colorIndex,

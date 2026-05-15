@@ -59,7 +59,7 @@ class SplitSession extends HiveObject {
   @HiveField(11)
   final String? freeDinerPersonId;
 
-  const SplitSession({
+  SplitSession({
     required this.id,
     required this.createdAt,
     this.label,

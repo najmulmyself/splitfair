@@ -31,7 +31,8 @@ class TipCalculator {
     required Decimal subtotal,
     required Decimal tax,
     required Decimal tip,
-  }) => subtotal + tax + tip;
+  }) =>
+      subtotal + tax + tip;
 
   /// Returns the tip percentage as a human-readable label.
   /// e.g. [Decimal.parse]('18') → '18%'
@@ -45,7 +46,7 @@ class TipCalculator {
     required Decimal tip,
   }) {
     if (subtotal == Decimal.zero) return Decimal.zero;
-    return (tip / subtotal * Decimal.fromInt(100)).toDecimal(
+    return (tip * Decimal.fromInt(100) / subtotal).toDecimal(
       scaleOnInfinitePrecision: 10,
     );
   }

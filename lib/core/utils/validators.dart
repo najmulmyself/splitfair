@@ -16,7 +16,7 @@ abstract class Validators {
 
   /// Soft warning threshold — tax > 50% of subtotal is unusual.
   static bool isTaxSuspiciouslyHigh(Decimal tax, Decimal subtotal) =>
-      subtotal > Decimal.zero && tax > (subtotal / Decimal.fromInt(2));
+      subtotal > Decimal.zero && tax * Decimal.fromInt(2) > subtotal;
 
   /// Person name: 1–20 characters, no leading/trailing whitespace
   static bool isValidPersonName(String name) =>

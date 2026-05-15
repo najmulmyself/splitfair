@@ -23,7 +23,7 @@ class SplitItem extends HiveObject {
   @HiveField(3)
   final List<String> assigneeIds;
 
-  const SplitItem({
+  SplitItem({
     required this.id,
     required this.description,
     required this.priceRaw,

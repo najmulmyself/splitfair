@@ -1,5 +1,4 @@
 import 'package:decimal/decimal.dart';
-import '../../data/models/person.dart';
 import '../../data/models/split_item.dart';
 import '../../data/models/split_mode.dart';
 import '../../data/models/split_result.dart';
@@ -56,9 +55,12 @@ class SplitCalculator {
   ) {
     final count = session.people.length;
     final decimalCount = Decimal.fromInt(count);
-    final subtotalPerPerson = session.subtotal / decimalCount;
-    final taxPerPerson = session.tax / decimalCount;
-    final tipPerPerson = tip / decimalCount;
+    final subtotalPerPerson = (session.subtotal / decimalCount)
+        .toDecimal(scaleOnInfinitePrecision: 10);
+    final taxPerPerson =
+        (session.tax / decimalCount).toDecimal(scaleOnInfinitePrecision: 10);
+    final tipPerPerson =
+        (tip / decimalCount).toDecimal(scaleOnInfinitePrecision: 10);
 
     final results = <SplitResult>[];
     Decimal runningTotal = Decimal.zero;
@@ -66,9 +68,8 @@ class SplitCalculator {
     for (int i = 0; i < count; i++) {
       final isLast = i == count - 1;
       final rawTotal = subtotalPerPerson + taxPerPerson + tipPerPerson;
-      final personTotal = isLast
-          ? grandTotal - runningTotal
-          : _round2(rawTotal);
+      final personTotal =
+          isLast ? grandTotal - runningTotal : _round2(rawTotal);
 
       runningTotal += personTotal;
 
@@ -106,9 +107,11 @@ class SplitCalculator {
 
       // shareWeight stores the person's subtotal in cents.
       final personSubtotal =
-          Decimal.fromInt(person.shareWeight) / Decimal.fromInt(100);
-      final proportion =
-          subtotal > Decimal.zero ? personSubtotal / subtotal : Decimal.zero;
+          (Decimal.fromInt(person.shareWeight) / Decimal.fromInt(100))
+              .toDecimal(scaleOnInfinitePrecision: 10);
+      final proportion = subtotal > Decimal.zero
+          ? (personSubtotal / subtotal).toDecimal(scaleOnInfinitePrecision: 10)
+          : Decimal.zero;
 
       final personTax = _round2(session.tax * proportion);
       final personTip = _round2(tip * proportion);
@@ -150,11 +153,11 @@ class SplitCalculator {
 
       // shareWeight is percentage × 10000 (basis points with 2 decimal precision).
       final proportion =
-          Decimal.fromInt(person.shareWeight) / Decimal.fromInt(10000);
+          (Decimal.fromInt(person.shareWeight) / Decimal.fromInt(10000))
+              .toDecimal(scaleOnInfinitePrecision: 10);
 
-      final rawTotal = isLast
-          ? grandTotal - runningTotal
-          : _round2(grandTotal * proportion);
+      final rawTotal =
+          isLast ? grandTotal - runningTotal : _round2(grandTotal * proportion);
 
       runningTotal += rawTotal;
 
@@ -187,7 +190,8 @@ class SplitCalculator {
     for (final item in session.items ?? <SplitItem>[]) {
       final assignees = item.assigneeIds;
       if (assignees.isEmpty) continue;
-      final share = item.price / Decimal.fromInt(assignees.length);
+      final share = (item.price / Decimal.fromInt(assignees.length))
+          .toDecimal(scaleOnInfinitePrecision: 10);
       for (final id in assignees) {
         if (personSubtotals.containsKey(id)) {
           personSubtotals[id] = personSubtotals[id]! + share;
@@ -205,7 +209,7 @@ class SplitCalculator {
       final isLast = i == count - 1;
       final personSubtotal = personSubtotals[person.id] ?? Decimal.zero;
       final proportion = subtotal > Decimal.zero
-          ? personSubtotal / subtotal
+          ? (personSubtotal / subtotal).toDecimal(scaleOnInfinitePrecision: 10)
           : Decimal.zero;
 
       final personTax = _round2(session.tax * proportion);
@@ -243,12 +247,12 @@ class SplitCalculator {
     if (freeIndex < 0) return results;
 
     final freeShare = results[freeIndex].total;
-    final paying = results.where((r) => r.person.id != freeDinerPersonId).toList();
+    final paying =
+        results.where((r) => r.person.id != freeDinerPersonId).toList();
     if (paying.isEmpty) return results;
 
     // Distribute the free person's share proportionally.
-    final payingTotal =
-        paying.fold(Decimal.zero, (sum, r) => sum + r.total);
+    final payingTotal = paying.fold(Decimal.zero, (sum, r) => sum + r.total);
 
     final updated = <SplitResult>[];
     Decimal runningRedistributed = Decimal.zero;
@@ -257,7 +261,7 @@ class SplitCalculator {
       final isLast = i == paying.length - 1;
       final r = paying[i];
       final proportion = payingTotal > Decimal.zero
-          ? r.total / payingTotal
+          ? (r.total / payingTotal).toDecimal(scaleOnInfinitePrecision: 10)
           : Decimal.zero;
 
       final extra = isLast
@@ -300,8 +304,7 @@ class SplitCalculator {
   // ── Helpers ──────────────────────────────────────────────────
 
   /// Rounds a [Decimal] to 2 decimal places.
-  static Decimal _round2(Decimal value) =>
-      value.toDecimal(scaleOnInfinitePrecision: 2);
+  static Decimal _round2(Decimal value) => value.round(scale: 2);
 
   /// Marks the highest and lowest payer in the result list.
   /// [excludeFree] skips zero-total free diners from badge assignment.
@@ -311,9 +314,8 @@ class SplitCalculator {
   }) {
     if (results.length <= 1) return results;
 
-    final eligible = excludeFree
-        ? results.where((r) => !r.isFree).toList()
-        : results;
+    final eligible =
+        excludeFree ? results.where((r) => !r.isFree).toList() : results;
 
     if (eligible.isEmpty) return results;
 

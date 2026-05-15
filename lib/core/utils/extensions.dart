@@ -21,8 +21,7 @@ extension StringX on String {
 
 extension DecimalX on Decimal {
   /// Round to 2 decimal places (half-up).
-  Decimal get roundedToTwoDp =>
-      toDecimal(scaleOnInfinitePrecision: 2);
+  Decimal get roundedToTwoDp => round(scale: 2);
 
   /// Returns true if the value is exactly zero.
   bool get isZero => this == Decimal.zero;

@@ -2,15 +2,14 @@ import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:splitfair/data/models/split_item.dart';
 import 'package:uuid/uuid.dart';
-import '../../data/models/person.dart';
-import '../../data/models/split_item.dart';
-import '../../data/models/split_mode.dart';
-import '../../data/models/split_result.dart';
-import '../../data/models/split_session.dart';
-import '../../domain/calculators/result_calculator.dart';
-import '../../core/utils/validators.dart';
+import '../../../data/models/person.dart';
+import '../../../data/models/split_item.dart';
+import '../../../data/models/split_mode.dart';
+import '../../../data/models/split_result.dart';
+import '../../../data/models/split_session.dart';
+import '../../../domain/calculators/result_calculator.dart';
+import '../../../core/utils/validators.dart';
 
 part 'calculator_provider.g.dart';
 
@@ -53,16 +52,16 @@ class CalculatorState {
 
   /// Returns the default initial state.
   factory CalculatorState.initial() => CalculatorState(
-    subtotal: Decimal.zero,
-    tax: Decimal.zero,
-    taxInputMode: TaxInputMode.dollar,
-    tipPercentage: Decimal.parse('18'),
-    tipOnSubtotal: true,
-    splitMode: SplitMode.equal,
-    roundingMode: RoundingMode.none,
-    currencyCode: 'USD',
-    people: const [],
-  );
+        subtotal: Decimal.zero,
+        tax: Decimal.zero,
+        taxInputMode: TaxInputMode.dollar,
+        tipPercentage: Decimal.parse('18'),
+        tipOnSubtotal: true,
+        splitMode: SplitMode.equal,
+        roundingMode: RoundingMode.none,
+        currencyCode: 'USD',
+        people: const [],
+      );
 
   /// Returns a copy with the given fields replaced.
   CalculatorState copyWith({
@@ -91,9 +90,8 @@ class CalculatorState {
       currencyCode: currencyCode ?? this.currencyCode,
       people: people ?? this.people,
       items: items ?? this.items,
-      freeDinerPersonId: clearFreeDiner
-          ? null
-          : freeDinerPersonId ?? this.freeDinerPersonId,
+      freeDinerPersonId:
+          clearFreeDiner ? null : freeDinerPersonId ?? this.freeDinerPersonId,
       sessionLabel: sessionLabel ?? this.sessionLabel,
     );
   }
@@ -185,10 +183,8 @@ class CalculatorNotifier extends _$CalculatorNotifier {
   /// Updates a person's custom subtotal amount (for custom split mode).
   /// [amount] is in currency units (e.g. 12.50 → stores as shareWeight 1250).
   void updatePersonAmount(String personId, Decimal amount) {
-    final cents = (amount * Decimal.fromInt(100))
-        .toDecimal(scaleOnInfinitePrecision: 0)
-        .toBigInt()
-        .toInt();
+    final cents =
+        (amount * Decimal.fromInt(100)).round(scale: 0).toBigInt().toInt();
     final updated = state.people.map((p) {
       return p.id == personId ? p.copyWith(shareWeight: cents) : p;
     }).toList();
@@ -198,10 +194,8 @@ class CalculatorNotifier extends _$CalculatorNotifier {
   /// Updates a person's percentage (for percentage split mode).
   /// [percentage] is in percent (e.g. 33.33 → stores as shareWeight 3333).
   void updatePersonPercentage(String personId, Decimal percentage) {
-    final basisPoints = (percentage * Decimal.fromInt(100))
-        .toDecimal(scaleOnInfinitePrecision: 0)
-        .toBigInt()
-        .toInt();
+    final basisPoints =
+        (percentage * Decimal.fromInt(100)).round(scale: 0).toBigInt().toInt();
     final updated = state.people.map((p) {
       return p.id == personId ? p.copyWith(shareWeight: basisPoints) : p;
     }).toList();
@@ -246,7 +240,8 @@ class CalculatorNotifier extends _$CalculatorNotifier {
   bool get customAmountsBalance {
     if (state.splitMode != SplitMode.custom) return true;
     final amounts = state.people.map((p) {
-      return Decimal.fromInt(p.shareWeight) / Decimal.fromInt(100);
+      return (Decimal.fromInt(p.shareWeight) / Decimal.fromInt(100))
+          .toDecimal(scaleOnInfinitePrecision: 2);
     }).toList();
     return Validators.customAmountsBalance(amounts, state.subtotal);
   }
@@ -255,8 +250,9 @@ class CalculatorNotifier extends _$CalculatorNotifier {
   Decimal get remainingPercentage {
     if (state.splitMode != SplitMode.percentage) return Decimal.zero;
     final allocated = state.people.fold(Decimal.zero, (sum, p) {
-      return sum +
-          Decimal.fromInt(p.shareWeight) / Decimal.fromInt(100);
+      final share = (Decimal.fromInt(p.shareWeight) / Decimal.fromInt(100))
+          .toDecimal(scaleOnInfinitePrecision: 2);
+      return sum + share;
     });
     final remaining = Decimal.fromInt(100) - allocated;
     return remaining < Decimal.zero ? Decimal.zero : remaining;
@@ -275,17 +271,17 @@ class CalculatorNotifier extends _$CalculatorNotifier {
   // ── Private helpers ───────────────────────────────────────────
 
   SplitSession _toSessionSnapshot() => SplitSession(
-    id: _uuid.v4(),
-    createdAt: DateTime.now(),
-    label: state.sessionLabel,
-    subtotalRaw: state.subtotal.toString(),
-    taxRaw: state.tax.toString(),
-    tipPercentageRaw: state.tipPercentage.toString(),
-    tipOnSubtotal: state.tipOnSubtotal,
-    splitMode: state.splitMode,
-    people: state.people,
-    items: state.items,
-    currencyCode: state.currencyCode,
-    freeDinerPersonId: state.freeDinerPersonId,
-  );
+        id: _uuid.v4(),
+        createdAt: DateTime.now(),
+        label: state.sessionLabel,
+        subtotalRaw: state.subtotal.toString(),
+        taxRaw: state.tax.toString(),
+        tipPercentageRaw: state.tipPercentage.toString(),
+        tipOnSubtotal: state.tipOnSubtotal,
+        splitMode: state.splitMode,
+        people: state.people,
+        items: state.items,
+        currencyCode: state.currencyCode,
+        freeDinerPersonId: state.freeDinerPersonId,
+      );
 }
