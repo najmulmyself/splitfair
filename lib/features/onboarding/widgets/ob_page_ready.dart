@@ -43,76 +43,84 @@ class _ObPageReadyState extends State<ObPageReady>
       return Stack(
         children: [
           // ── Floating icon: Globe / Currency (top-right) ──────
-          _FloatingIconBubble(
-            icon: Icons.language_rounded,
-            color: AppColors.primaryViolet,
-            bgColor: const Color(0xFF1A1040),
-            ctrl: _floatCtrl,
-            phase: 0.0,
+          Positioned(
             top: cy - 120,
             left: cx + 70,
-          )
-              .animate(target: widget.isActive ? 1 : 0)
-              .fade(duration: 400.ms, delay: 600.ms)
-              .scale(
-                  begin: const Offset(0.4, 0.4),
-                  duration: 500.ms,
-                  delay: 600.ms,
-                  curve: Curves.elasticOut),
+            child: _FloatingIconBubble(
+              icon: Icons.language_rounded,
+              color: AppColors.primaryViolet,
+              bgColor: const Color(0xFF1A1040),
+              ctrl: _floatCtrl,
+              phase: 0.0,
+            )
+                .animate(target: widget.isActive ? 1 : 0)
+                .fade(duration: 400.ms, delay: 600.ms)
+                .scale(
+                    begin: const Offset(0.4, 0.4),
+                    duration: 500.ms,
+                    delay: 600.ms,
+                    curve: Curves.elasticOut),
+          ),
 
           // ── Floating icon: Phone / No WiFi (far right) ───────
-          _FloatingIconBubble(
-            icon: Icons.wifi_off_rounded,
-            color: AppColors.coralPink,
-            bgColor: const Color(0xFF2E1020),
-            ctrl: _floatCtrl,
-            phase: 0.6,
+          Positioned(
             top: cy - 30,
             left: cx + 110,
-          )
-              .animate(target: widget.isActive ? 1 : 0)
-              .fade(duration: 400.ms, delay: 750.ms)
-              .scale(
-                  begin: const Offset(0.4, 0.4),
-                  duration: 500.ms,
-                  delay: 750.ms,
-                  curve: Curves.elasticOut),
+            child: _FloatingIconBubble(
+              icon: Icons.wifi_off_rounded,
+              color: AppColors.coralPink,
+              bgColor: const Color(0xFF2E1020),
+              ctrl: _floatCtrl,
+              phase: 0.6,
+            )
+                .animate(target: widget.isActive ? 1 : 0)
+                .fade(duration: 400.ms, delay: 750.ms)
+                .scale(
+                    begin: const Offset(0.4, 0.4),
+                    duration: 500.ms,
+                    delay: 750.ms,
+                    curve: Curves.elasticOut),
+          ),
 
           // ── Floating icon: Mic (bottom-left) ─────────────────
-          _FloatingIconBubble(
-            icon: Icons.mic_rounded,
-            color: AppColors.emeraldMint,
-            bgColor: const Color(0xFF0E2820),
-            ctrl: _floatCtrl,
-            phase: 1.2,
+          Positioned(
             top: cy + 70,
             left: cx - 150,
-          )
-              .animate(target: widget.isActive ? 1 : 0)
-              .fade(duration: 400.ms, delay: 500.ms)
-              .scale(
-                  begin: const Offset(0.4, 0.4),
-                  duration: 500.ms,
-                  delay: 500.ms,
-                  curve: Curves.elasticOut),
+            child: _FloatingIconBubble(
+              icon: Icons.mic_rounded,
+              color: AppColors.emeraldMint,
+              bgColor: const Color(0xFF0E2820),
+              ctrl: _floatCtrl,
+              phase: 1.2,
+            )
+                .animate(target: widget.isActive ? 1 : 0)
+                .fade(duration: 400.ms, delay: 500.ms)
+                .scale(
+                    begin: const Offset(0.4, 0.4),
+                    duration: 500.ms,
+                    delay: 500.ms,
+                    curve: Curves.elasticOut),
+          ),
 
           // ── Floating icon: Phone (top-left) ──────────────────
-          _FloatingIconBubble(
-            icon: Icons.smartphone_rounded,
-            color: AppColors.warmAmber,
-            bgColor: const Color(0xFF221810),
-            ctrl: _floatCtrl,
-            phase: 1.8,
+          Positioned(
             top: cy - 80,
             left: cx - 155,
-          )
-              .animate(target: widget.isActive ? 1 : 0)
-              .fade(duration: 400.ms, delay: 680.ms)
-              .scale(
-                  begin: const Offset(0.4, 0.4),
-                  duration: 500.ms,
-                  delay: 680.ms,
-                  curve: Curves.elasticOut),
+            child: _FloatingIconBubble(
+              icon: Icons.smartphone_rounded,
+              color: AppColors.warmAmber,
+              bgColor: const Color(0xFF221810),
+              ctrl: _floatCtrl,
+              phase: 1.8,
+            )
+                .animate(target: widget.isActive ? 1 : 0)
+                .fade(duration: 400.ms, delay: 680.ms)
+                .scale(
+                    begin: const Offset(0.4, 0.4),
+                    duration: 500.ms,
+                    delay: 680.ms,
+                    curve: Curves.elasticOut),
+          ),
 
           // ── Central SF logo ───────────────────────────────────
           Positioned(
@@ -180,8 +188,6 @@ class _FloatingIconBubble extends StatelessWidget {
     required this.bgColor,
     required this.ctrl,
     required this.phase,
-    required this.top,
-    required this.left,
   });
 
   final IconData icon;
@@ -189,44 +195,38 @@ class _FloatingIconBubble extends StatelessWidget {
   final Color bgColor;
   final AnimationController ctrl;
   final double phase;
-  final double top;
-  final double left;
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      top: top,
-      left: left,
-      child: AnimatedBuilder(
-        animation: ctrl,
-        builder: (context, child) {
-          final t = (ctrl.value + phase / (2 * math.pi)) % 1.0;
-          final dy = math.sin(t * 2 * math.pi) * 7.0;
-          return Transform.translate(
-            offset: Offset(0, dy),
-            child: child,
-          );
-        },
-        child: Container(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(
-            color: bgColor,
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: color.withOpacity(0.30),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: color.withOpacity(0.20),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ],
+    return AnimatedBuilder(
+      animation: ctrl,
+      builder: (context, child) {
+        final t = (ctrl.value + phase / (2 * math.pi)) % 1.0;
+        final dy = math.sin(t * 2 * math.pi) * 7.0;
+        return Transform.translate(
+          offset: Offset(0, dy),
+          child: child,
+        );
+      },
+      child: Container(
+        width: 52,
+        height: 52,
+        decoration: BoxDecoration(
+          color: bgColor,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: color.withOpacity(0.30),
+            width: 1,
           ),
-          child: Icon(icon, color: color, size: 22),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.20),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
+        child: Icon(icon, color: color, size: 22),
       ),
     );
   }

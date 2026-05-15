@@ -1,7 +1,5 @@
 PODS:
   - Flutter (1.0.0)
-  - flutter_haptic_feedback (0.0.1):
-    - Flutter
   - Google-Mobile-Ads-SDK (12.14.0):
     - GoogleUserMessagingPlatform (>= 1.1)
   - google_mobile_ads (7.0.0):
@@ -30,7 +28,6 @@ PODS:
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
-  - flutter_haptic_feedback (from `.symlinks/plugins/flutter_haptic_feedback/ios`)
   - google_mobile_ads (from `.symlinks/plugins/google_mobile_ads/ios`)
   - in_app_purchase_storekit (from `.symlinks/plugins/in_app_purchase_storekit/darwin`)
   - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
@@ -48,8 +45,6 @@ SPEC REPOS:
 EXTERNAL SOURCES:
   Flutter:
     :path: Flutter
-  flutter_haptic_feedback:
-    :path: ".symlinks/plugins/flutter_haptic_feedback/ios"
   google_mobile_ads:
     :path: ".symlinks/plugins/google_mobile_ads/ios"
   in_app_purchase_storekit:
@@ -69,7 +64,6 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
-  flutter_haptic_feedback: 0ef95386d0ed6897189b91b6f5feeb156d6cadb4
   Google-Mobile-Ads-SDK: 4534fd2dfcd3f705c5485a6633c5188d03d4eed2
   google_mobile_ads: 2ba32ffef4a026aa94f526774a40a14ca9662adf
   GoogleUserMessagingPlatform: befe603da6501006420c206222acd449bba45a9c
@@ -81,6 +75,6 @@ SPEC CHECKSUMS:
   url_launcher_ios: bb13df5870e8c4234ca12609d04010a21be43dfa
   webview_flutter_wkwebview: 29eb20d43355b48fe7d07113835b9128f84e3af4
 
-PODFILE CHECKSUM: 3c63482e143d1b91d2d2560aee9fb04ecc74ac7e
+PODFILE CHECKSUM: e90b26fd484e22acd7aaef3a1743f99d7c12da74
 
 COCOAPODS: 1.15.2

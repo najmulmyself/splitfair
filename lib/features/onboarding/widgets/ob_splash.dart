@@ -9,72 +9,75 @@ class ObSplash extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Spacer(flex: 3),
+    return SizedBox.expand(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          const Spacer(flex: 3),
 
-        // ── Interlocking S·F circles ────────────────────────
-        _LogoMark()
-            .animate()
-            .scale(
-              begin: const Offset(0.55, 0.55),
-              end: const Offset(1, 1),
-              duration: 700.ms,
-              delay: 200.ms,
-              curve: Curves.elasticOut,
-            )
-            .fade(begin: 0, duration: 400.ms, delay: 200.ms),
+          // ── Interlocking S·F circles ────────────────────────
+          _LogoMark()
+              .animate()
+              .scale(
+                begin: const Offset(0.55, 0.55),
+                end: const Offset(1, 1),
+                duration: 700.ms,
+                delay: 200.ms,
+                curve: Curves.elasticOut,
+              )
+              .fade(begin: 0, duration: 400.ms, delay: 200.ms),
 
-        const SizedBox(height: 28),
+          const SizedBox(height: 28),
 
-        // ── SplitFair ────────────────────────────────────────
-        const Text(
-          'SplitFair',
-          style: TextStyle(
-            fontFamily: '.SF Pro Display',
-            fontSize: 40,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-            letterSpacing: -0.5,
-          ),
-        ).animate().fade(begin: 0, duration: 400.ms, delay: 700.ms).slideY(
-            begin: 0.15,
-            end: 0,
-            duration: 400.ms,
-            delay: 700.ms,
-            curve: Curves.easeOut),
+          // ── SplitFair ────────────────────────────────────────
+          const Text(
+            'SplitFair',
+            style: TextStyle(
+              fontFamily: '.SF Pro Display',
+              fontSize: 40,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+              letterSpacing: -0.5,
+            ),
+          ).animate().fade(begin: 0, duration: 400.ms, delay: 700.ms).slideY(
+              begin: 0.15,
+              end: 0,
+              duration: 400.ms,
+              delay: 700.ms,
+              curve: Curves.easeOut),
 
-        const SizedBox(height: 10),
+          const SizedBox(height: 10),
 
-        // ── Tagline ──────────────────────────────────────────
-        Text(
-          'FAIR  ·  FAST  ·  OFFLINE',
-          style: TextStyle(
-            fontFamily: '.SF Pro Text',
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textPrimary.withOpacity(0.45),
-            letterSpacing: 3.0,
-          ),
-        ).animate().fade(begin: 0, duration: 350.ms, delay: 950.ms),
-
-        const Spacer(flex: 3),
-
-        // ── Version tag ──────────────────────────────────────
-        Padding(
-          padding: const EdgeInsets.only(bottom: 36),
-          child: Text(
-            'v1.0 — made for the table, not the cloud',
+          // ── Tagline ──────────────────────────────────────────
+          Text(
+            'FAIR  ·  FAST  ·  OFFLINE',
             style: TextStyle(
               fontFamily: '.SF Pro Text',
               fontSize: 11,
-              fontWeight: FontWeight.w400,
-              color: AppColors.textPrimary.withOpacity(0.28),
+              fontWeight: FontWeight.w500,
+              color: AppColors.textPrimary.withOpacity(0.45),
+              letterSpacing: 3.0,
             ),
-          ),
-        ).animate().fade(begin: 0, duration: 300.ms, delay: 1200.ms),
-      ],
+          ).animate().fade(begin: 0, duration: 350.ms, delay: 950.ms),
+
+          const Spacer(flex: 3),
+
+          // ── Version tag ──────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.only(bottom: 36),
+            child: Text(
+              'v1.0 — made for the table, not the cloud',
+              style: TextStyle(
+                fontFamily: '.SF Pro Text',
+                fontSize: 11,
+                fontWeight: FontWeight.w400,
+                color: AppColors.textPrimary.withOpacity(0.28),
+              ),
+            ),
+          ).animate().fade(begin: 0, duration: 300.ms, delay: 1200.ms),
+        ],
+      ),
     );
   }
 }

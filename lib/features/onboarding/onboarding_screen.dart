@@ -109,16 +109,18 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
           // ── Splash overlay ───────────────────────────────────
           if (_showSplash)
-            AnimatedBuilder(
-              animation: _splashExitCtrl,
-              builder: (context, child) => Opacity(
-                opacity: _splashFade.value,
-                child: Transform.scale(
-                  scale: _splashScale.value,
-                  child: child,
+            Positioned.fill(
+              child: AnimatedBuilder(
+                animation: _splashExitCtrl,
+                builder: (context, child) => Opacity(
+                  opacity: _splashFade.value,
+                  child: Transform.scale(
+                    scale: _splashScale.value,
+                    child: child,
+                  ),
                 ),
+                child: const ObSplash(),
               ),
-              child: const ObSplash(),
             ),
         ],
       ),

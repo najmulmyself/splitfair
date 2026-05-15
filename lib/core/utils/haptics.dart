@@ -1,31 +1,25 @@
-import 'package:flutter_haptic_feedback/flutter_haptic_feedback.dart';
+import 'package:flutter/services.dart';
 
 /// Haptic feedback helpers. Use these instead of calling the plugin directly.
 abstract class Haptics {
   /// Light tap — for chip selection, toggle changes.
-  static void selection() => FlutterHapticFeedback.selection();
+  static void selection() => HapticFeedback.selectionClick();
 
   /// Medium impact — for confirm actions, adding a person.
-  static void impact() =>
-      FlutterHapticFeedback.impact(ImpactFeedbackStyle.medium);
+  static void impact() => HapticFeedback.mediumImpact();
 
   /// Light impact — for number pad key presses.
-  static void lightImpact() =>
-      FlutterHapticFeedback.impact(ImpactFeedbackStyle.light);
+  static void lightImpact() => HapticFeedback.lightImpact();
 
   /// Heavy impact — for destructive actions (delete).
-  static void heavyImpact() =>
-      FlutterHapticFeedback.impact(ImpactFeedbackStyle.heavy);
+  static void heavyImpact() => HapticFeedback.heavyImpact();
 
   /// Success notification — for share, save completed.
-  static void success() =>
-      FlutterHapticFeedback.notification(NotificationFeedbackType.success);
+  static void success() => HapticFeedback.mediumImpact();
 
   /// Error notification — for validation failures.
-  static void error() =>
-      FlutterHapticFeedback.notification(NotificationFeedbackType.error);
+  static void error() => HapticFeedback.heavyImpact();
 
   /// Warning notification — for soft warnings.
-  static void warning() =>
-      FlutterHapticFeedback.notification(NotificationFeedbackType.warning);
+  static void warning() => HapticFeedback.lightImpact();
 }

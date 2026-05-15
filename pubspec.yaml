@@ -1,6 +1,6 @@
 name: splitfair
 description: Bill Splitter & Tip Calculator — Free, Fair, No Signup
-publish_to: 'none'
+publish_to: "none"
 version: 1.0.0+1
 
 environment:
@@ -47,7 +47,6 @@ dependencies:
 
   # ── UTILITIES ───────────────────────────────────────────────
   package_info_plus: ^9.0.1
-  flutter_haptic_feedback: ^1.0.1
 
 dev_dependencies:
   flutter_test:
