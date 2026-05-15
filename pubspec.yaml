@@ -59,9 +59,10 @@ dev_dependencies:
   mockito: ^5.4.4
   flutter_launcher_icons: ^0.14.4
 
-flutter_icons:
+flutter_launcher_icons:
   ios: true
-  image_path: "assets/images/app_icon_1024.png"
+  android: false
+  image_path: "assets/icons/icon.png"
   remove_alpha_ios: true
 
 flutter:
