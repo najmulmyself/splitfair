@@ -1,0 +1,86 @@
+name: splitfair
+description: Bill Splitter & Tip Calculator — Free, Fair, No Signup
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.2.0 <4.0.0"
+  flutter: ">=3.19.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # ── CORE LOGIC ──────────────────────────────────────────────
+  decimal: ^2.3.3
+  intl: ^0.19.0
+  collection: ^1.18.0
+
+  # ── STATE MANAGEMENT ────────────────────────────────────────
+  flutter_riverpod: ^2.5.1
+  riverpod_annotation: ^2.3.5
+
+  # ── LOCAL STORAGE ───────────────────────────────────────────
+  shared_preferences: ^2.2.3
+  hive_flutter: ^1.1.0
+  hive: ^2.2.3
+
+  # ── NAVIGATION ──────────────────────────────────────────────
+  go_router: ^13.2.0
+
+  # ── UI & ANIMATION ──────────────────────────────────────────
+  flutter_animate: ^4.5.0
+  lottie: ^3.1.0
+  flutter_svg: ^2.0.10+1
+  google_fonts: ^6.2.1
+
+  # ── SHARING & EXPORT ────────────────────────────────────────
+  share_plus: ^9.0.0
+  screenshot: ^2.3.0
+  url_launcher: ^6.3.0
+
+  # ── ADMOB ───────────────────────────────────────────────────
+  google_mobile_ads: ^5.1.0
+
+  # ── IN-APP PURCHASE ─────────────────────────────────────────
+  in_app_purchase: ^3.2.0
+
+  # ── UTILITIES ───────────────────────────────────────────────
+  package_info_plus: ^8.0.0
+  flutter_haptic_feedback: ^0.0.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.2
+  build_runner: ^2.4.9
+  riverpod_generator: ^2.4.3
+  hive_generator: ^2.0.1
+  mockito: ^5.4.4
+  flutter_launcher_icons: ^0.13.1
+
+flutter_icons:
+  ios: true
+  image_path: "assets/images/app_icon_1024.png"
+  remove_alpha_ios: true
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/animations/
+    - assets/icons/
+    - assets/images/
+    - assets/data/
+  fonts:
+    - family: AppFont
+      fonts:
+        - asset: assets/fonts/SF-Pro-Rounded-Bold.otf
+          weight: 700
+        - asset: assets/fonts/SF-Pro-Rounded-Heavy.otf
+          weight: 800
+        - asset: assets/fonts/SF-Pro-Display-Semibold.otf
+          weight: 600
+        - asset: assets/fonts/SF-Pro-Text-Regular.otf
+          weight: 400
+        - asset: assets/fonts/SF-Pro-Text-Medium.otf
+          weight: 500
