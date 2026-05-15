@@ -145,6 +145,22 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     }
   }
 
+  Future<void> _showCustomTipDialog() async {
+    Haptics.impact();
+    final result = await showModalBottomSheet<Decimal>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _CustomTipSheet(
+        current: ref.read(calculatorNotifierProvider).tipPercentage,
+      ),
+    );
+    if (result != null) {
+      ref.read(calculatorNotifierProvider.notifier).setTipPercentage(result);
+      Haptics.selection();
+    }
+  }
+
   void _onPersonLongPress(String personId) {
     final people = ref.read(calculatorNotifierProvider).people;
     if (people.length <= 1) return;
@@ -262,6 +278,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                           notifier.setTipOnSubtotal(val);
                           Haptics.selection();
                         },
+                        onMoreTap: _showCustomTipDialog,
                       ).animate().fade(duration: 280.ms).slideY(
                           begin: 0.08,
                           end: 0,
@@ -850,6 +867,178 @@ class _RemovePersonSheet extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
                   ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Custom tip bottom sheet ───────────────────────────────────────────────
+
+class _CustomTipSheet extends StatefulWidget {
+  const _CustomTipSheet({required this.current});
+  final Decimal current;
+
+  @override
+  State<_CustomTipSheet> createState() => _CustomTipSheetState();
+}
+
+class _CustomTipSheetState extends State<_CustomTipSheet> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    // Pre-fill with current custom value if it's not a preset
+    const presets = [10, 15, 18, 20, 25];
+    final currentInt = widget.current.toBigInt().toInt();
+    final isPreset = presets.contains(currentInt) &&
+        widget.current == Decimal.fromInt(currentInt);
+    _controller = TextEditingController(
+        text: isPreset ? '' : widget.current.toStringAsFixed(0));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit(String raw) {
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return;
+    final parsed = double.tryParse(trimmed);
+    if (parsed == null || parsed < 0 || parsed > 100) return;
+    final d = Decimal.parse(parsed.toStringAsFixed(2));
+    Navigator.pop(context, d);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottom = MediaQuery.of(context).viewInsets.bottom;
+    return Container(
+      padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + bottom),
+      decoration: const BoxDecoration(
+        color: AppColors.surface1,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Handle
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.borderDefault,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            'Custom Tip',
+            style: TextStyle(
+              fontFamily: '.SF Pro Display',
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Enter any percentage between 0 and 100.',
+            style: TextStyle(
+              fontFamily: '.SF Pro Text',
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Quick option — No Tip
+          GestureDetector(
+            onTap: () => Navigator.pop(context, Decimal.zero),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+              decoration: BoxDecoration(
+                color: AppColors.surface2,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.borderDefault),
+              ),
+              child: const Text(
+                'No Tip (0%)',
+                style: TextStyle(
+                  fontFamily: '.SF Pro Text',
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextField(
+            controller: _controller,
+            autofocus: true,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))
+            ],
+            style: const TextStyle(
+              fontFamily: '.SF Pro Text',
+              fontSize: 16,
+              color: AppColors.textPrimary,
+            ),
+            decoration: InputDecoration(
+              hintText: 'e.g. 12',
+              suffixText: '%',
+              suffixStyle: const TextStyle(
+                fontFamily: '.SF Pro Text',
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primaryViolet,
+              ),
+              hintStyle: const TextStyle(color: AppColors.textTertiary),
+              filled: true,
+              fillColor: AppColors.surface2,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                    color: AppColors.primaryViolet, width: 1.5),
+              ),
+            ),
+            onSubmitted: _submit,
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              onPressed: () => _submit(_controller.text),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryViolet,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+                elevation: 0,
+              ),
+              child: const Text(
+                'Apply Tip',
+                style: TextStyle(
+                  fontFamily: '.SF Pro Display',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ),

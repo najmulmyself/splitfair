@@ -12,12 +12,14 @@ class TipSection extends StatelessWidget {
     required this.tipOnSubtotal,
     required this.onTipSelected,
     required this.onToggleTipBase,
+    required this.onMoreTap,
   });
 
   final Decimal selectedTip;
   final bool tipOnSubtotal;
   final ValueChanged<Decimal> onTipSelected;
   final ValueChanged<bool> onToggleTipBase;
+  final VoidCallback onMoreTap;
 
   @override
   Widget build(BuildContext context) {
@@ -57,11 +59,7 @@ class TipSection extends StatelessWidget {
                 ),
               );
             }),
-            _MoreButton(
-              onTap: () {
-                // Custom tip — handled by parent via dialog
-              },
-            ),
+            _MoreButton(onTap: onMoreTap),
           ],
         ),
 
