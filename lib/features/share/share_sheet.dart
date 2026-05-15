@@ -358,19 +358,13 @@ class _ResultCard extends StatelessWidget {
                 // SplitFair badge
                 Row(
                   children: [
-                    Container(
-                      width: 16,
-                      height: 16,
-                      decoration: const BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.white24,
-                      ),
-                      child: const Center(
-                        child: Text('S',
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.w800)),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: Image.asset(
+                        'assets/icons/icon.png',
+                        width: 18,
+                        height: 18,
+                        fit: BoxFit.cover,
                       ),
                     ),
                     const SizedBox(width: 5),

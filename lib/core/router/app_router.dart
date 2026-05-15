@@ -8,6 +8,7 @@ import '../../features/onboarding/onboarding_provider.dart';
 import '../../features/share/share_sheet.dart';
 import '../../features/currency/currency_selector_sheet.dart';
 import '../../features/pro_unlock/pro_unlock_sheet.dart';
+import '../../features/settings/settings_screen.dart';
 
 part 'app_router.g.dart';
 
@@ -72,8 +73,7 @@ GoRouter appRouter(AppRouterRef ref) {
       GoRoute(
         path: AppRoutes.settings,
         name: 'settings',
-        builder: (context, state) =>
-            const _PlaceholderScreen(title: 'Settings'),
+        builder: (context, state) => const SettingsScreen(),
       ),
     ],
   );
