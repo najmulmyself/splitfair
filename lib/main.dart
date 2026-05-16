@@ -22,6 +22,7 @@ void main() async {
   Hive.registerAdapter(SplitItemAdapter());
   Hive.registerAdapter(SplitModeAdapter());
   Hive.registerAdapter(SplitSessionAdapter());
+  await Hive.openBox<SplitSession>('split_history');
 
   // ── SharedPreferences ────────────────────────────────────────
   final prefs = await SharedPreferences.getInstance();

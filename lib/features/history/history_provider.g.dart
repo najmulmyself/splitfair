@@ -16,7 +16,7 @@ final historyNotifierProvider =
   $allTransitiveDependencies: null,
   from: null,
   argument: null,
-  isAutoDispose: true,
+  isAutoDispose: false,
   retry: null,
 );
 

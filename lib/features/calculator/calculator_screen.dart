@@ -9,8 +9,10 @@ import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/haptics.dart';
 import '../../data/models/currency.dart';
+import '../../data/models/split_session.dart';
 import '../../data/sources/currency_data_source.dart';
 import '../currency/currency_provider.dart';
+import '../history/history_provider.dart';
 import 'providers/calculator_provider.dart';
 import 'widgets/bill_card.dart';
 import 'widgets/numpad.dart';
@@ -331,7 +333,28 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                       key: const ValueKey('bottom_bar'),
                       hasResults: results.isNotEmpty,
                       hasBill: hasBill,
-                      onShare: () => context.push(AppRoutes.share),
+                      onShare: () async {
+                        final calcState = ref.read(calculatorNotifierProvider);
+                        final session = SplitSession(
+                          id: DateTime.now().millisecondsSinceEpoch.toString(),
+                          createdAt: DateTime.now(),
+                          label: calcState.sessionLabel,
+                          subtotalRaw: calcState.subtotal.toStringAsFixed(2),
+                          taxRaw: calcState.tax.toStringAsFixed(2),
+                          tipPercentageRaw:
+                              calcState.tipPercentage.toStringAsFixed(2),
+                          tipOnSubtotal: calcState.tipOnSubtotal,
+                          splitMode: calcState.splitMode,
+                          people: calcState.people,
+                          currencyCode: calcState.currencyCode,
+                        );
+                        await ref
+                            .read(historyNotifierProvider.notifier)
+                            .save(session);
+                        if (context.mounted) {
+                          context.push(AppRoutes.share);
+                        }
+                      },
                     ),
             ),
           ],

@@ -9,6 +9,7 @@ import '../../features/share/share_sheet.dart';
 import '../../features/currency/currency_selector_sheet.dart';
 import '../../features/pro_unlock/pro_unlock_sheet.dart';
 import '../../features/settings/settings_screen.dart';
+import '../../features/history/history_screen.dart';
 
 part 'app_router.g.dart';
 
@@ -58,7 +59,7 @@ GoRouter appRouter(AppRouterRef ref) {
       GoRoute(
         path: AppRoutes.history,
         name: 'history',
-        builder: (context, state) => const _PlaceholderScreen(title: 'History'),
+        builder: (context, state) => const HistoryScreen(),
       ),
       GoRoute(
         path: AppRoutes.receiptScanner,

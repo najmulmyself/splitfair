@@ -1,12 +1,721 @@
-// History screen — Phase 2. UI implementation pending.
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
-/// Displays saved split sessions (Phase 2 — Pro feature).
-/// Full UI implementation pending.
-class HistoryScreen extends StatelessWidget {
+import '../../core/theme/app_colors.dart';
+import '../../core/utils/haptics.dart';
+import '../../data/models/person.dart';
+import '../../data/models/split_result.dart';
+import '../../data/models/split_session.dart';
+import '../../domain/calculators/result_calculator.dart';
+import 'history_provider.dart';
+
+class HistoryScreen extends ConsumerStatefulWidget {
   const HistoryScreen({super.key});
 
   @override
-  Widget build(BuildContext context) =>
-      const Scaffold(body: Center(child: Text('History')));
+  ConsumerState<HistoryScreen> createState() => _HistoryScreenState();
+}
+
+class _HistoryScreenState extends ConsumerState<HistoryScreen> {
+  final _expandedIds = <String>{};
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final sessions = ref.read(historyNotifierProvider);
+      if (sessions.isNotEmpty) {
+        setState(() => _expandedIds.add(sessions.first.id));
+      }
+    });
+  }
+
+  void _toggleExpand(String id) {
+    Haptics.selection();
+    setState(() {
+      if (_expandedIds.contains(id)) {
+        _expandedIds.remove(id);
+      } else {
+        _expandedIds.add(id);
+      }
+    });
+  }
+
+  Future<bool?> _confirmDelete(SplitSession session) {
+    return showCupertinoDialog<bool>(
+      context: context,
+      builder: (ctx) => CupertinoAlertDialog(
+        title: const Text('Delete Split?'),
+        content: Text(
+          'Remove "${session.label?.isNotEmpty == true ? session.label! : 'Split Session'}" from history?',
+        ),
+        actions: [
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final sessions = ref.watch(historyNotifierProvider);
+
+    return Scaffold(
+      backgroundColor: AppColors.bgBase,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _HistoryAppBar(),
+            Expanded(
+              child: sessions.isEmpty
+                  ? const _EmptyState()
+                  : _SessionList(
+                      sessions: sessions,
+                      expandedIds: _expandedIds,
+                      onToggle: _toggleExpand,
+                      onConfirmDelete: _confirmDelete,
+                      onDelete: (session) async {
+                        Haptics.impact();
+                        await ref
+                            .read(historyNotifierProvider.notifier)
+                            .delete(session.id);
+                        _expandedIds.remove(session.id);
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _HistoryAppBar extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GestureDetector(
+            onTap: () => context.pop(),
+            behavior: HitTestBehavior.opaque,
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.chevron_left_rounded,
+                    color: AppColors.primaryViolet, size: 24),
+                Text(
+                  'SplitFair',
+                  style: TextStyle(
+                    fontFamily: '.SF Pro Text',
+                    fontSize: 17,
+                    color: AppColors.primaryViolet,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Past Splits',
+            style: TextStyle(
+              fontFamily: '.SF Pro Display',
+              fontSize: 34,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Last 20 splits — stored on your iPhone',
+            style: TextStyle(
+              fontFamily: '.SF Pro Text',
+              fontSize: 14,
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _SessionList extends StatelessWidget {
+  const _SessionList({
+    required this.sessions,
+    required this.expandedIds,
+    required this.onToggle,
+    required this.onConfirmDelete,
+    required this.onDelete,
+  });
+
+  final List<SplitSession> sessions;
+  final Set<String> expandedIds;
+  final ValueChanged<String> onToggle;
+  final Future<bool?> Function(SplitSession) onConfirmDelete;
+  final ValueChanged<SplitSession> onDelete;
+
+  static const _adIndex = 3;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = <Widget>[];
+
+    for (int i = 0; i < sessions.length; i++) {
+      if (i == _adIndex) {
+        items.add(const _AdSlot());
+        items.add(const SizedBox(height: 12));
+      }
+      final session = sessions[i];
+      items.add(
+        Dismissible(
+          key: ValueKey(session.id),
+          direction: DismissDirection.endToStart,
+          confirmDismiss: (_) => onConfirmDelete(session),
+          onDismissed: (_) => onDelete(session),
+          background: Container(
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 20),
+            decoration: BoxDecoration(
+              color: AppColors.error.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(Icons.delete_outline_rounded,
+                color: AppColors.error, size: 24),
+          ),
+          child: _SessionCard(
+            session: session,
+            isExpanded: expandedIds.contains(session.id),
+            onTap: () => onToggle(session.id),
+          ),
+        ),
+      );
+      items.add(const SizedBox(height: 12));
+    }
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+      children: items,
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _SessionCard extends StatelessWidget {
+  const _SessionCard({
+    required this.session,
+    required this.isExpanded,
+    required this.onTap,
+  });
+
+  final SplitSession session;
+  final bool isExpanded;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final result = ResultCalculator.compute(session);
+    final title =
+        session.label?.isNotEmpty == true ? session.label! : 'Split Session';
+    final fmt = NumberFormat.simpleCurrency(name: session.currencyCode);
+    final totalStr = fmt.format(result.grandTotal.toDouble());
+
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surface1,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.borderDefault),
+        ),
+        clipBehavior: Clip.hardEdge,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _DateBadge(date: session.createdAt),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            fontFamily: '.SF Pro Display',
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        _AvatarStack(people: session.people),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        totalStr,
+                        style: const TextStyle(
+                          fontFamily: '.SF Pro Display',
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        '${session.people.length} ${session.people.length == 1 ? 'person' : 'people'}',
+                        style: const TextStyle(
+                          fontFamily: '.SF Pro Text',
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            if (isExpanded) ...[
+              const Divider(
+                  height: 1, thickness: 0.5, color: AppColors.borderDefault),
+              ...result.perPerson.asMap().entries.map((e) => _PersonRow(
+                    result: e.value,
+                    currencySymbol: fmt.currencySymbol,
+                    isLast: e.key == result.perPerson.length - 1,
+                  )),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _DateBadge extends StatelessWidget {
+  const _DateBadge({required this.date});
+  final DateTime date;
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final day = DateTime(date.year, date.month, date.day);
+    final diff = today.difference(day).inDays;
+
+    Widget content;
+    if (diff == 0) {
+      content = const Text(
+        'TODAY',
+        style: TextStyle(
+          fontFamily: '.SF Pro Text',
+          fontSize: 9,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textSecondary,
+          letterSpacing: 0.4,
+        ),
+      );
+    } else if (diff == 1) {
+      content = const FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          'YESTER\nDAY',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: '.SF Pro Text',
+            fontSize: 8,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textSecondary,
+            letterSpacing: 0.3,
+            height: 1.3,
+          ),
+        ),
+      );
+    } else {
+      content = Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            DateFormat('MMM').format(date).toUpperCase(),
+            style: const TextStyle(
+              fontFamily: '.SF Pro Text',
+              fontSize: 9,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textSecondary,
+              letterSpacing: 0.4,
+            ),
+          ),
+          Text(
+            '${date.day}',
+            style: const TextStyle(
+              fontFamily: '.SF Pro Display',
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+              height: 1.1,
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Container(
+      width: 54,
+      height: 54,
+      decoration: BoxDecoration(
+        color: AppColors.surface2,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Center(child: content),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _AvatarStack extends StatelessWidget {
+  const _AvatarStack({required this.people});
+  final List<Person> people;
+
+  static const _maxVisible = 4;
+  static const _size = 24.0;
+  static const _step = 16.0; // size - overlap(8)
+
+  @override
+  Widget build(BuildContext context) {
+    final gradients = AppColors.personGradients;
+    final visible = people.take(_maxVisible).toList();
+    final overflow = people.length - _maxVisible;
+    final slotCount = visible.length + (overflow > 0 ? 1 : 0);
+    final totalWidth = _size + (slotCount - 1) * _step;
+
+    return SizedBox(
+      height: _size,
+      width: totalWidth,
+      child: Stack(
+        children: [
+          ...visible.asMap().entries.map((e) {
+            final i = e.key;
+            final person = e.value;
+            final g = gradients[person.colorIndex % gradients.length];
+            return Positioned(
+              left: i * _step,
+              child: _Avatar(
+                initial:
+                    person.name.isNotEmpty ? person.name[0].toUpperCase() : '?',
+                gradient: g,
+              ),
+            );
+          }),
+          if (overflow > 0)
+            Positioned(
+              left: visible.length * _step,
+              child: Container(
+                width: _size,
+                height: _size,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.surface3,
+                  border: Border.all(color: AppColors.surface1, width: 1.5),
+                ),
+                child: Center(
+                  child: Text(
+                    '+$overflow',
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: '.SF Pro Text',
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Avatar extends StatelessWidget {
+  const _Avatar({required this.initial, required this.gradient});
+  final String initial;
+  final List<Color> gradient;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 24,
+      height: 24,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          colors: [gradient[0], gradient[1]],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(color: AppColors.surface1, width: 1.5),
+      ),
+      child: Center(
+        child: Text(
+          initial,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            fontFamily: '.SF Pro Display',
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _PersonRow extends StatelessWidget {
+  const _PersonRow({
+    required this.result,
+    required this.currencySymbol,
+    required this.isLast,
+  });
+
+  final SplitResult result;
+  final String currencySymbol;
+  final bool isLast;
+
+  @override
+  Widget build(BuildContext context) {
+    final gradients = AppColors.personGradients;
+    final g = gradients[result.person.colorIndex % gradients.length];
+    final initial = result.person.name.isNotEmpty
+        ? result.person.name[0].toUpperCase()
+        : '?';
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [g[0], g[1]],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    initial,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      fontFamily: '.SF Pro Display',
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  result.person.name,
+                  style: const TextStyle(
+                    fontFamily: '.SF Pro Text',
+                    fontSize: 15,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+              Text(
+                '$currencySymbol${result.total.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  fontFamily: '.SF Pro Display',
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (!isLast)
+          const Divider(
+            height: 1,
+            thickness: 0.5,
+            indent: 54,
+            color: AppColors.borderDefault,
+          ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _AdSlot extends StatelessWidget {
+  const _AdSlot();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface1,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.borderDefault),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E3A2F),
+                borderRadius: BorderRadius.circular(11),
+              ),
+              child: const Center(
+                child: Icon(Icons.bolt_rounded,
+                    color: Color(0xFF4CD964), size: 24),
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Try Lemon Wallet',
+                    style: TextStyle(
+                      fontFamily: '.SF Pro Display',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Send money — no fees, no signup hassle.',
+                    style: TextStyle(
+                      fontFamily: '.SF Pro Text',
+                      fontSize: 13,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              decoration: BoxDecoration(
+                color: AppColors.surface3,
+                borderRadius: BorderRadius.circular(5),
+              ),
+              child: const Text(
+                'AD',
+                style: TextStyle(
+                  fontFamily: '.SF Pro Text',
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textTertiary,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: AppColors.surface1,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.borderDefault),
+              ),
+              child: const Center(
+                child: Text('\uD83E\uDDFE', style: TextStyle(fontSize: 32)),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'No splits yet',
+              style: TextStyle(
+                fontFamily: '.SF Pro Display',
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Your completed bill splits will appear here.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: '.SF Pro Text',
+                fontSize: 15,
+                color: AppColors.textSecondary,
+                height: 1.4,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
