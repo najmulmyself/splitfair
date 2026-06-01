@@ -608,7 +608,7 @@ class _CoffeeBanner extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Buy us a coffee',
+                    'Buy me a coffee',
                     style: TextStyle(
                       fontFamily: '.SF Pro Display',
                       fontSize: 15,
