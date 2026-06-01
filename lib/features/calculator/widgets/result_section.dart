@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/split_result.dart';
+import '../providers/calculator_provider.dart' show FlexOverride, FlexOverrideType;
 
 /// Shows the computed split summary and per-person result cards.
 class ResultSection extends StatelessWidget {
@@ -17,6 +18,9 @@ class ResultSection extends StatelessWidget {
     this.useIndividualTips = false,
     this.perPersonTipBps = const {},
     this.onPersonTipChanged,
+    this.useFlexSplit = false,
+    this.flexOverrides = const {},
+    this.onFlexOverrideChanged,
   });
 
   final List<SplitResult> results;
@@ -27,6 +31,10 @@ class ResultSection extends StatelessWidget {
   final bool useIndividualTips;
   final Map<String, int> perPersonTipBps;
   final void Function(String personId, Decimal pct)? onPersonTipChanged;
+  final bool useFlexSplit;
+  final Map<String, FlexOverride> flexOverrides;
+  /// Called with null to clear the override (back to equal).
+  final void Function(String personId, FlexOverride? override)? onFlexOverrideChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -81,6 +89,11 @@ class ResultSection extends StatelessWidget {
               individualTipPct: tipPct,
               onTipChanged: onPersonTipChanged != null
                   ? (pct) => onPersonTipChanged!(r.person.id, pct)
+                  : null,
+              showFlexControl: useFlexSplit,
+              flexOverride: flexOverrides[r.person.id],
+              onFlexOverrideChanged: onFlexOverrideChanged != null
+                  ? (o) => onFlexOverrideChanged!(r.person.id, o)
                   : null,
             )
                 .animate()
@@ -189,12 +202,18 @@ class _PersonResultCard extends StatelessWidget {
     this.showTipControl = false,
     this.individualTipPct,
     this.onTipChanged,
+    this.showFlexControl = false,
+    this.flexOverride,
+    this.onFlexOverrideChanged,
   });
   final SplitResult result;
   final String currencySymbol;
   final bool showTipControl;
   final Decimal? individualTipPct;
   final ValueChanged<Decimal>? onTipChanged;
+  final bool showFlexControl;
+  final FlexOverride? flexOverride;
+  final void Function(FlexOverride? override)? onFlexOverrideChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -319,6 +338,15 @@ class _PersonResultCard extends StatelessWidget {
             _IndividualTipControl(
               currentPct: individualTipPct ?? Decimal.fromInt(18),
               onChanged: onTipChanged!,
+            ),
+          ],
+          // Flex split override control
+          if (showFlexControl && onFlexOverrideChanged != null) ...[
+            const SizedBox(height: 10),
+            _FlexOverrideControl(
+              flexOverride: flexOverride,
+              currencySymbol: currencySymbol,
+              onChanged: onFlexOverrideChanged!,
             ),
           ],
         ],
@@ -598,6 +626,184 @@ class _Badge extends StatelessWidget {
           fontWeight: FontWeight.w700,
           color: color,
           letterSpacing: 0.5,
+        ),
+      ),
+    );
+  }
+}
+
+// ── Flex override control ─────────────────────────────────────────────────
+
+class _FlexOverrideControl extends StatefulWidget {
+  const _FlexOverrideControl({
+    required this.flexOverride,
+    required this.currencySymbol,
+    required this.onChanged,
+  });
+  final FlexOverride? flexOverride;
+  final String currencySymbol;
+  final void Function(FlexOverride? override) onChanged;
+
+  @override
+  State<_FlexOverrideControl> createState() => _FlexOverrideControlState();
+}
+
+class _FlexOverrideControlState extends State<_FlexOverrideControl> {
+  final _ctrl = TextEditingController();
+  FlexOverrideType _type = FlexOverrideType.amount;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.flexOverride != null) {
+      _type = widget.flexOverride!.type;
+      _ctrl.text = widget.flexOverride!.value.toStringAsFixed(
+          widget.flexOverride!.type == FlexOverrideType.amount ? 2 : 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _commit(String val) {
+    final d = double.tryParse(val);
+    if (d == null || d <= 0) {
+      widget.onChanged(null);
+      return;
+    }
+    if (_type == FlexOverrideType.percentage && d > 100) return;
+    widget.onChanged(
+        FlexOverride(type: _type, value: Decimal.parse(d.toStringAsFixed(2))));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasOverride = widget.flexOverride != null;
+    return Row(
+      children: [
+        // Equal chip (clears override)
+        _OverrideChip(
+          label: 'Equal',
+          selected: !hasOverride,
+          color: AppColors.primaryViolet,
+          onTap: () {
+            setState(() => _ctrl.clear());
+            widget.onChanged(null);
+          },
+        ),
+        const SizedBox(width: 6),
+        // $ chip
+        _OverrideChip(
+          label: widget.currencySymbol,
+          selected: hasOverride && _type == FlexOverrideType.amount,
+          color: AppColors.warmAmber,
+          onTap: () => setState(() => _type = FlexOverrideType.amount),
+        ),
+        const SizedBox(width: 6),
+        // % chip
+        _OverrideChip(
+          label: '%',
+          selected: hasOverride && _type == FlexOverrideType.percentage,
+          color: AppColors.warmAmber,
+          onTap: () => setState(() => _type = FlexOverrideType.percentage),
+        ),
+        const SizedBox(width: 8),
+        // Amount input
+        Expanded(
+          child: TextField(
+            controller: _ctrl,
+            keyboardType:
+                const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))
+            ],
+            style: TextStyle(
+              fontFamily: '.SF Pro Text',
+              fontSize: 13,
+              color: context.colors.textPrimary,
+            ),
+            decoration: InputDecoration(
+              hintText: _type == FlexOverrideType.amount
+                  ? 'Amount'
+                  : 'Percentage',
+              hintStyle: TextStyle(
+                  color: context.colors.textTertiary, fontSize: 13),
+              prefixText: _type == FlexOverrideType.amount
+                  ? widget.currencySymbol
+                  : null,
+              suffixText:
+                  _type == FlexOverrideType.percentage ? '%' : null,
+              filled: true,
+              fillColor: context.colors.surface2,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide.none,
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(
+                    color: AppColors.warmAmber, width: 1.5),
+              ),
+              suffixIcon: _ctrl.text.isNotEmpty
+                  ? GestureDetector(
+                      onTap: () {
+                        setState(() => _ctrl.clear());
+                        widget.onChanged(null);
+                      },
+                      child: Icon(Icons.clear_rounded,
+                          size: 16,
+                          color: context.colors.textTertiary),
+                    )
+                  : null,
+            ),
+            onChanged: (_) {
+              setState(() {});
+              _commit(_ctrl.text);
+            },
+            onSubmitted: _commit,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _OverrideChip extends StatelessWidget {
+  const _OverrideChip({
+    required this.label,
+    required this.selected,
+    required this.color,
+    required this.onTap,
+  });
+  final String label;
+  final bool selected;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: selected ? color : context.colors.surface2,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontFamily: '.SF Pro Text',
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: selected ? Colors.white : context.colors.textSecondary,
+          ),
         ),
       ),
     );

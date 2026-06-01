@@ -19,6 +19,17 @@ enum TaxInputMode { dollar, percent }
 /// How each person's share is rounded in the final display.
 enum RoundingMode { none, up50c, up1 }
 
+/// Type of flex override for a person's share.
+enum FlexOverrideType { amount, percentage }
+
+/// A per-person override in flex split mode.
+class FlexOverride {
+  const FlexOverride({required this.type, required this.value});
+  final FlexOverrideType type;
+  /// Dollar amount OR percentage (e.g. Decimal.parse('60') for $60 or 40%).
+  final Decimal value;
+}
+
 /// The complete state of the calculator screen.
 @immutable
 class CalculatorState {
@@ -37,6 +48,8 @@ class CalculatorState {
     this.sessionLabel,
     this.useIndividualTips = false,
     this.perPersonTipBps = const {},
+    this.useFlexSplit = false,
+    this.flexOverrides = const {},
   });
 
   final Decimal subtotal;
@@ -54,6 +67,9 @@ class CalculatorState {
   /// Per-person tip in basis points (1800 = 18%). Only used when [useIndividualTips].
   final Map<String, int> perPersonTipBps;
   final bool useIndividualTips;
+  /// Per-person flex overrides (fixed $ or %). Only used when [useFlexSplit].
+  final Map<String, FlexOverride> flexOverrides;
+  final bool useFlexSplit;
 
   /// Returns the default initial state.
   factory CalculatorState.initial() => CalculatorState(
@@ -68,6 +84,8 @@ class CalculatorState {
         people: const [],
         useIndividualTips: false,
         perPersonTipBps: const {},
+        useFlexSplit: false,
+        flexOverrides: const {},
       );
 
   /// Returns a copy with the given fields replaced.
@@ -87,6 +105,8 @@ class CalculatorState {
     bool clearFreeDiner = false,
     bool? useIndividualTips,
     Map<String, int>? perPersonTipBps,
+    bool? useFlexSplit,
+    Map<String, FlexOverride>? flexOverrides,
   }) {
     return CalculatorState(
       subtotal: subtotal ?? this.subtotal,
@@ -104,6 +124,8 @@ class CalculatorState {
       sessionLabel: sessionLabel ?? this.sessionLabel,
       useIndividualTips: useIndividualTips ?? this.useIndividualTips,
       perPersonTipBps: perPersonTipBps ?? this.perPersonTipBps,
+      useFlexSplit: useFlexSplit ?? this.useFlexSplit,
+      flexOverrides: flexOverrides ?? this.flexOverrides,
     );
   }
 }
@@ -250,6 +272,71 @@ class CalculatorNotifier extends _$CalculatorNotifier {
     state = state.copyWith(perPersonTipBps: updated);
   }
 
+  // ── Flex split ────────────────────────────────────────────────
+
+  /// Toggles flex split mode on/off. Clears overrides when turning off.
+  void toggleFlexSplit() {
+    final next = !state.useFlexSplit;
+    state = state.copyWith(
+      useFlexSplit: next,
+      flexOverrides: const {},
+    );
+  }
+
+  /// Sets a per-person flex override (fixed $ or %).
+  void setFlexOverride(String personId, FlexOverride override) {
+    final updated = Map<String, FlexOverride>.from(state.flexOverrides)
+      ..[personId] = override;
+    state = state.copyWith(flexOverrides: updated);
+  }
+
+  /// Removes a person's flex override (back to equal).
+  void clearFlexOverride(String personId) {
+    final updated = Map<String, FlexOverride>.from(state.flexOverrides)
+      ..remove(personId);
+    state = state.copyWith(flexOverrides: updated);
+  }
+
+  /// The remaining amount after all overrides, to be split equally.
+  Decimal get flexRemainder {
+    if (!state.useFlexSplit) return Decimal.zero;
+    final gt = _baseGrandTotal;
+    if (gt <= Decimal.zero) return Decimal.zero;
+    Decimal used = Decimal.zero;
+    for (final o in state.flexOverrides.values) {
+      if (o.type == FlexOverrideType.amount) {
+        used += o.value;
+      } else {
+        used += (gt * o.value / Decimal.fromInt(100))
+            .toDecimal(scaleOnInfinitePrecision: 10);
+      }
+    }
+    final rem = gt - used;
+    return rem < Decimal.zero ? Decimal.zero : rem;
+  }
+
+  /// True when flex overrides exceed the grand total.
+  bool get flexOverridesExceedTotal {
+    if (!state.useFlexSplit) return false;
+    final gt = _baseGrandTotal;
+    if (gt <= Decimal.zero) return false;
+    Decimal used = Decimal.zero;
+    for (final o in state.flexOverrides.values) {
+      if (o.type == FlexOverrideType.amount) {
+        used += o.value;
+      } else {
+        used += (gt * o.value / Decimal.fromInt(100))
+            .toDecimal(scaleOnInfinitePrecision: 10);
+      }
+    }
+    return used > gt;
+  }
+
+  Decimal get _baseGrandTotal {
+    final session = _toSessionSnapshot();
+    return ResultCalculator.compute(session).grandTotal;
+  }
+
   // ── Computed ─────────────────────────────────────────────────
 
   /// Returns true when a valid subtotal is entered and at least one person exists.
@@ -258,6 +345,7 @@ class CalculatorNotifier extends _$CalculatorNotifier {
 
   /// Returns the computed tip amount.
   Decimal get computedTip {
+    if (state.useFlexSplit) return _baseGrandTotal - state.subtotal - state.tax;
     if (state.useIndividualTips && state.perPersonTipBps.isNotEmpty) {
       return results.fold(Decimal.zero, (s, r) => s + r.tipShare);
     }
@@ -267,6 +355,7 @@ class CalculatorNotifier extends _$CalculatorNotifier {
 
   /// Returns the grand total (subtotal + tax + tip).
   Decimal get grandTotal {
+    if (state.useFlexSplit) return _baseGrandTotal;
     if (state.useIndividualTips && state.perPersonTipBps.isNotEmpty) {
       return results.fold(Decimal.zero, (s, r) => s + r.total);
     }
@@ -275,9 +364,14 @@ class CalculatorNotifier extends _$CalculatorNotifier {
   }
 
   /// Returns the computed per-person split results.
+  /// When flex split is active, applies per-person overrides.
   /// When individual tips are active, recalculates each person's tip share.
   List<SplitResult> get results {
     if (!hasValidInput) return [];
+
+    // ── Flex split ────────────────────────────────────────────
+    if (state.useFlexSplit) return _flexResults();
+
     final session = _toSessionSnapshot();
     final base = ResultCalculator.compute(session).perPerson;
     if (!state.useIndividualTips || state.perPersonTipBps.isEmpty) return base;
@@ -337,6 +431,82 @@ class CalculatorNotifier extends _$CalculatorNotifier {
   SplitSession toSession() => _toSessionSnapshot();
 
   // ── Private helpers ───────────────────────────────────────────
+
+  /// Computes per-person results when flex split is active.
+  List<SplitResult> _flexResults() {
+    final gt = _baseGrandTotal;
+    if (gt <= Decimal.zero || state.people.isEmpty) return [];
+
+    // Compute each overridden person's total.
+    final overrideTotals = <String, Decimal>{};
+    Decimal usedTotal = Decimal.zero;
+
+    for (final p in state.people) {
+      final o = state.flexOverrides[p.id];
+      if (o == null) continue;
+      final Decimal personTotal;
+      if (o.type == FlexOverrideType.amount) {
+        personTotal = o.value;
+      } else {
+        personTotal = (gt * o.value / Decimal.fromInt(100))
+            .toDecimal(scaleOnInfinitePrecision: 10)
+            .round(scale: 2);
+      }
+      overrideTotals[p.id] = personTotal;
+      usedTotal += personTotal;
+    }
+
+    // Equal share for remaining people.
+    final equalPeople =
+        state.people.where((p) => !overrideTotals.containsKey(p.id)).toList();
+    final remainder = (gt - usedTotal).round(scale: 2);
+    final equalShare = equalPeople.isEmpty
+        ? Decimal.zero
+        : (remainder / Decimal.fromInt(equalPeople.length))
+            .toDecimal(scaleOnInfinitePrecision: 10)
+            .round(scale: 2);
+
+    // Build results — last equal person absorbs rounding remainder.
+    final results = <SplitResult>[];
+    Decimal equalRunning = Decimal.zero;
+    int equalIdx = 0;
+
+    for (final p in state.people) {
+      final Decimal total;
+      if (overrideTotals.containsKey(p.id)) {
+        total = overrideTotals[p.id]!;
+      } else {
+        final isLastEqual = equalIdx == equalPeople.length - 1;
+        total = isLastEqual
+            ? (remainder - equalRunning).round(scale: 2)
+            : equalShare;
+        equalRunning += total;
+        equalIdx++;
+      }
+
+      results.add(SplitResult(
+        person: p,
+        subtotalShare: Decimal.zero,
+        taxShare: Decimal.zero,
+        tipShare: Decimal.zero,
+        total: total,
+      ));
+    }
+
+    // Apply MOST/LEAST badges.
+    if (results.length > 1) {
+      final sorted = [...results]..sort((a, b) => a.total.compareTo(b.total));
+      final minT = sorted.first.total;
+      final maxT = sorted.last.total;
+      if (minT != maxT) {
+        return results.map((r) => r.copyWith(
+              isHighest: r.total == maxT,
+              isLowest: r.total == minT,
+            )).toList();
+      }
+    }
+    return results;
+  }
 
   SplitSession _toSessionSnapshot() => SplitSession(
         id: _uuid.v4(),

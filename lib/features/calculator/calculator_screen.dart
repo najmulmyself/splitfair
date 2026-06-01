@@ -415,6 +415,30 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                       ),
                     ],
 
+                    // Flex split toggle + remainder banner
+                    if (!_isEditing && hasResults) ...[
+                      const SizedBox(height: 10),
+                      _FlexSplitToggle(
+                        enabled: calcState.useFlexSplit,
+                        onToggle: () {
+                          notifier.toggleFlexSplit();
+                          Haptics.selection();
+                        },
+                      ),
+                    ],
+                    if (!_isEditing && hasResults && calcState.useFlexSplit) ...[
+                      const SizedBox(height: 8),
+                      _FlexRemainderBanner(
+                        remainder: notifier.flexRemainder,
+                        equalCount: calcState.people
+                            .where((p) =>
+                                !calcState.flexOverrides.containsKey(p.id))
+                            .length,
+                        currencySymbol: _activeCurrency.symbol,
+                        exceeds: notifier.flexOverridesExceedTotal,
+                      ),
+                    ],
+
                     // Individual tips toggle
                     if (!_isEditing && hasResults) ...[
                       const SizedBox(height: 10),
@@ -440,6 +464,12 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                         perPersonTipBps: calcState.perPersonTipBps,
                         onPersonTipChanged: (personId, pct) =>
                             notifier.setPersonTip(personId, pct),
+                        useFlexSplit: calcState.useFlexSplit,
+                        flexOverrides: calcState.flexOverrides,
+                        onFlexOverrideChanged: (personId, override) =>
+                            override == null
+                                ? notifier.clearFlexOverride(personId)
+                                : notifier.setFlexOverride(personId, override),
                       ),
                     ],
 
@@ -481,7 +511,8 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                     )
                   : _BottomBar(
                       key: const ValueKey('bottom_bar'),
-                      hasResults: results.isNotEmpty,
+                      hasResults: results.isNotEmpty &&
+                          !notifier.flexOverridesExceedTotal,
                       hasBill: hasBill,
                       onShare: () async {
                         final calcState = ref.read(calculatorNotifierProvider);
@@ -1518,6 +1549,142 @@ class _WhoNxtBanner extends ConsumerWidget {
         ],
       ),
     ).animate().fade(duration: 300.ms).slideY(begin: -0.2, end: 0, duration: 300.ms);
+  }
+}
+
+// ── Flex split toggle ─────────────────────────────────────────────────────
+
+class _FlexSplitToggle extends StatelessWidget {
+  const _FlexSplitToggle({required this.enabled, required this.onToggle});
+  final bool enabled;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onToggle,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: enabled
+              ? AppColors.warmAmber.withOpacity(0.12)
+              : context.colors.surface1,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: enabled
+                ? AppColors.warmAmber.withOpacity(0.45)
+                : context.colors.borderDefault,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              Icons.balance_rounded,
+              size: 16,
+              color: enabled ? AppColors.warmAmber : context.colors.textSecondary,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              'Customize who pays what',
+              style: TextStyle(
+                fontFamily: '.SF Pro Text',
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: enabled ? AppColors.warmAmber : context.colors.textSecondary,
+              ),
+            ),
+            const Spacer(),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 36,
+              height: 20,
+              decoration: BoxDecoration(
+                color: enabled ? AppColors.warmAmber : context.colors.surface2,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: context.colors.borderDefault),
+              ),
+              child: AnimatedAlign(
+                duration: const Duration(milliseconds: 200),
+                alignment: enabled ? Alignment.centerRight : Alignment.centerLeft,
+                child: Container(
+                  width: 16,
+                  height: 16,
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Flex remainder banner ─────────────────────────────────────────────────
+
+class _FlexRemainderBanner extends StatelessWidget {
+  const _FlexRemainderBanner({
+    required this.remainder,
+    required this.equalCount,
+    required this.currencySymbol,
+    required this.exceeds,
+  });
+  final Decimal remainder;
+  final int equalCount;
+  final String currencySymbol;
+  final bool exceeds;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = exceeds ? AppColors.coralPink : AppColors.emeraldMint;
+    final String msg;
+    if (exceeds) {
+      msg = 'Overrides exceed the total — reduce amounts';
+    } else if (equalCount == 0) {
+      msg = 'Everyone has a custom amount';
+    } else {
+      final share = equalCount > 0
+          ? (remainder / Decimal.fromInt(equalCount))
+              .toDecimal(scaleOnInfinitePrecision: 2)
+              .round(scale: 2)
+          : Decimal.zero;
+      msg =
+          '$currencySymbol${remainder.toStringAsFixed(2)} left → $equalCount ${equalCount == 1 ? 'person' : 'people'} × $currencySymbol${share.toStringAsFixed(2)} each';
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.10),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            exceeds ? Icons.warning_rounded : Icons.info_outline_rounded,
+            size: 14,
+            color: color,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              msg,
+              style: TextStyle(
+                fontFamily: '.SF Pro Text',
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: color,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
