@@ -16,6 +16,8 @@ class TipSection extends StatelessWidget {
     required this.onToggleTipBase,
     required this.onMoreTap,
     this.onGuideTap,
+    this.hasTax = false,
+    this.tipSavings,
   });
 
   final Decimal selectedTip;
@@ -24,6 +26,10 @@ class TipSection extends StatelessWidget {
   final ValueChanged<bool> onToggleTipBase;
   final VoidCallback onMoreTap;
   final VoidCallback? onGuideTap;
+  /// True when user has entered a tax amount.
+  final bool hasTax;
+  /// Dollar difference between tipping on total vs subtotal. Non-null when hasTax.
+  final Decimal? tipSavings;
 
   @override
   Widget build(BuildContext context) {
@@ -89,19 +95,14 @@ class TipSection extends StatelessWidget {
             if (onGuideTap != null)
               GestureDetector(
                 onTap: onGuideTap,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '🌍 Tip guide',
-                      style: TextStyle(
-                        fontFamily: '.SF Pro Text',
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.primaryViolet,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  '🌍 Tip guide',
+                  style: TextStyle(
+                    fontFamily: '.SF Pro Text',
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.primaryViolet,
+                  ),
                 ),
               ),
           ],
@@ -111,6 +112,48 @@ class TipSection extends StatelessWidget {
           onSubtotal: tipOnSubtotal,
           onChanged: onToggleTipBase,
         ),
+
+        // Context line below toggle
+        const SizedBox(height: 6),
+        if (!hasTax)
+          Text(
+            'Add tax above to see the savings difference.',
+            style: TextStyle(
+              fontFamily: '.SF Pro Text',
+              fontSize: 11,
+              color: context.colors.textTertiary,
+              fontStyle: FontStyle.italic,
+            ),
+          )
+        else if (tipSavings != null && tipSavings! > Decimal.zero) ...[
+          Row(
+            children: [
+              Icon(
+                tipOnSubtotal
+                    ? Icons.check_circle_rounded
+                    : Icons.info_outline_rounded,
+                size: 13,
+                color: tipOnSubtotal
+                    ? AppColors.emeraldMint
+                    : context.colors.textTertiary,
+              ),
+              const SizedBox(width: 5),
+              Text(
+                tipOnSubtotal
+                    ? 'Saving \$${tipSavings!.toStringAsFixed(2)} by not tipping on tax'
+                    : 'Tipping on tax costs \$${tipSavings!.toStringAsFixed(2)} extra',
+                style: TextStyle(
+                  fontFamily: '.SF Pro Text',
+                  fontSize: 11,
+                  color: tipOnSubtotal
+                      ? AppColors.emeraldMint
+                      : context.colors.textTertiary,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }

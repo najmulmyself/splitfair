@@ -329,45 +329,25 @@ class _PersonResultCard extends StatelessWidget {
 
 // ── Individual tip inline control ─────────────────────────────────────────
 
-class _IndividualTipControl extends StatefulWidget {
+const _kTipPresets = [0, 10, 15, 18, 20];
+
+class _IndividualTipControl extends StatelessWidget {
   const _IndividualTipControl(
       {required this.currentPct, required this.onChanged});
   final Decimal currentPct;
   final ValueChanged<Decimal> onChanged;
 
-  @override
-  State<_IndividualTipControl> createState() => _IndividualTipControlState();
-}
+  bool get _isCustom => !_kTipPresets
+      .any((p) => currentPct == Decimal.fromInt(p));
 
-class _IndividualTipControlState extends State<_IndividualTipControl> {
-  late TextEditingController _ctrl;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = TextEditingController(
-        text: widget.currentPct.toStringAsFixed(0));
-  }
-
-  @override
-  void didUpdateWidget(_IndividualTipControl old) {
-    super.didUpdateWidget(old);
-    if (old.currentPct != widget.currentPct) {
-      final newText = widget.currentPct.toStringAsFixed(0);
-      if (_ctrl.text != newText) _ctrl.text = newText;
-    }
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  void _commit(String val) {
-    final d = double.tryParse(val);
-    if (d == null || d < 0 || d > 100) return;
-    widget.onChanged(Decimal.parse(d.toStringAsFixed(1)));
+  Future<void> _openCustomSheet(BuildContext context) async {
+    final result = await showModalBottomSheet<Decimal>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _CustomTipSheet(current: _isCustom ? currentPct : null),
+    );
+    if (result != null) onChanged(result);
   }
 
   @override
@@ -383,15 +363,16 @@ class _IndividualTipControlState extends State<_IndividualTipControl> {
           ),
         ),
         const SizedBox(width: 8),
-        ...[0, 10, 15, 18, 20].map((p) {
+        ..._kTipPresets.map((p) {
           final d = Decimal.fromInt(p);
-          final sel = widget.currentPct == d;
+          final sel = !_isCustom && currentPct == d;
           return GestureDetector(
-            onTap: () => widget.onChanged(d),
+            onTap: () => onChanged(d),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
               margin: const EdgeInsets.only(right: 6),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: sel
                     ? AppColors.primaryViolet
@@ -404,15 +385,120 @@ class _IndividualTipControlState extends State<_IndividualTipControl> {
                   fontFamily: '.SF Pro Text',
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: sel ? Colors.white : context.colors.textSecondary,
+                  color:
+                      sel ? Colors.white : context.colors.textSecondary,
                 ),
               ),
             ),
           );
         }),
-        Expanded(
-          child: TextField(
+        // Custom chip
+        GestureDetector(
+          onTap: () => _openCustomSheet(context),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: _isCustom
+                  ? AppColors.primaryViolet
+                  : context.colors.surface2,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              _isCustom
+                  ? '${currentPct.toStringAsFixed(0)}%'
+                  : 'Custom',
+              style: TextStyle(
+                fontFamily: '.SF Pro Text',
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: _isCustom
+                    ? Colors.white
+                    : context.colors.textSecondary,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Custom tip bottom sheet for individual tip control ────────────────────
+
+class _CustomTipSheet extends StatefulWidget {
+  const _CustomTipSheet({this.current});
+  final Decimal? current;
+
+  @override
+  State<_CustomTipSheet> createState() => _CustomTipSheetState();
+}
+
+class _CustomTipSheetState extends State<_CustomTipSheet> {
+  late TextEditingController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = TextEditingController(
+      text: widget.current != null
+          ? widget.current!.toStringAsFixed(0)
+          : '',
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final val = _ctrl.text.trim();
+    final d = double.tryParse(val);
+    if (d == null || d < 0 || d > 100) return;
+    Navigator.pop(context, Decimal.parse(d.toStringAsFixed(1)));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottom = MediaQuery.of(context).viewInsets.bottom;
+    return Container(
+      padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + bottom),
+      decoration: BoxDecoration(
+        color: context.colors.surface1,
+        borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: context.colors.borderDefault,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Custom tip %',
+            style: TextStyle(
+              fontFamily: '.SF Pro Display',
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: context.colors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 14),
+          TextField(
             controller: _ctrl,
+            autofocus: true,
             keyboardType:
                 const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [
@@ -420,29 +506,70 @@ class _IndividualTipControlState extends State<_IndividualTipControl> {
             ],
             style: TextStyle(
               fontFamily: '.SF Pro Text',
-              fontSize: 12,
+              fontSize: 16,
               color: context.colors.textPrimary,
             ),
             decoration: InputDecoration(
-              hintText: 'Custom',
-              hintStyle: TextStyle(
-                  color: context.colors.textTertiary, fontSize: 12),
+              hintText: 'Enter percentage',
+              hintStyle:
+                  TextStyle(color: context.colors.textTertiary),
               suffixText: '%',
-              suffixStyle: TextStyle(
-                  fontSize: 12, color: context.colors.textSecondary),
+              suffixStyle: const TextStyle(
+                fontFamily: '.SF Pro Text',
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppColors.primaryViolet,
+              ),
+              suffixIcon: _ctrl.text.isNotEmpty
+                  ? IconButton(
+                      icon: Icon(Icons.clear_rounded,
+                          color: context.colors.textSecondary,
+                          size: 18),
+                      onPressed: () =>
+                          setState(() => _ctrl.clear()),
+                    )
+                  : null,
               filled: true,
               fillColor: context.colors.surface2,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              counterText: '',
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide.none,
               ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                    color: AppColors.primaryViolet, width: 1.5),
+              ),
             ),
-            onSubmitted: _commit,
+            onChanged: (_) => setState(() {}),
+            onSubmitted: (_) => _submit(),
           ),
-        ),
-      ],
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              onPressed: _submit,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primaryViolet,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+                elevation: 0,
+              ),
+              child: const Text(
+                'Apply',
+                style: TextStyle(
+                  fontFamily: '.SF Pro Display',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

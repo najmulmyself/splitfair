@@ -17,6 +17,7 @@ import '../history/history_provider.dart';
 import '../settings/settings_provider.dart';
 import '../tip_guide/tip_guide_sheet.dart';
 import 'providers/calculator_provider.dart';
+import '../../domain/calculators/tip_calculator.dart';
 import 'widgets/bill_card.dart';
 import 'widgets/numpad.dart';
 import 'widgets/people_row.dart';
@@ -377,6 +378,14 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                       TipSection(
                         selectedTip: calcState.tipPercentage,
                         tipOnSubtotal: calcState.tipOnSubtotal,
+                        hasTax: calcState.tax > Decimal.zero,
+                        tipSavings: calcState.tax > Decimal.zero
+                            ? TipCalculator.tipDifference(
+                                subtotal: calcState.subtotal,
+                                tax: calcState.tax,
+                                tipPercentage: calcState.tipPercentage,
+                              )
+                            : null,
                         onTipSelected: (tip) {
                           notifier.setTipPercentage(tip);
                           Haptics.selection();
