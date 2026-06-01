@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -139,6 +141,31 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
     if (!await launchUrl(uri)) {
       await _copyToClipboard(summary);
     }
+  }
+
+  Future<void> _sharePdf(String text) async {
+    final bytes = await _captureCard();
+    if (bytes == null) {
+      await _shareText(text);
+      return;
+    }
+    final doc = pw.Document();
+    final image = pw.MemoryImage(bytes);
+    doc.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(24),
+        build: (_) => pw.Center(child: pw.Image(image)),
+      ),
+    );
+    final pdfBytes = await doc.save();
+    final xFile = XFile.fromData(
+      Uint8List.fromList(pdfBytes),
+      mimeType: 'application/pdf',
+      name: 'splitfair_result.pdf',
+    );
+    await SharePlus.instance.share(ShareParams(files: [xFile], text: text));
+    _triggerInterstitial();
   }
 
   Future<void> _openZelle() async {
@@ -280,6 +307,20 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
                             _shareImage(textSummary);
                           },
                         ),
+                        _SendButton(
+                          label: 'PDF',
+                          color: const Color(0xFFE74C3C),
+                          child: const Text('PDF',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  fontFamily: '.SF Pro Display')),
+                          onTap: () {
+                            Haptics.impact();
+                            _sharePdf(textSummary);
+                          },
+                        ),
                       ],
                     ).animate().fade(duration: 300.ms, delay: 120.ms).slideY(
                         begin: 0.1,
@@ -327,6 +368,35 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
                         duration: 350.ms,
                         delay: 200.ms,
                         curve: Curves.easeOut),
+
+                    if (results.isNotEmpty) ...[
+                      const SizedBox(height: 24),
+                      // ── WHO COVERED? ─────────────────────────
+                      _SectionLabel(label: 'WHO COVERED THE BILL?'),
+                      const SizedBox(height: 12),
+                      _WhoPayedRow(
+                        results: results,
+                        onSelect: (name) {
+                          ref
+                              .read(settingsRepositoryProvider)
+                              .setLastPayer(name);
+                          Haptics.selection();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('$name covered — noted for next time!',
+                                  style:
+                                      const TextStyle(color: Colors.white)),
+                              backgroundColor:
+                                  context.colors.surface2,
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                      ).animate().fade(duration: 300.ms, delay: 280.ms),
+                    ],
                   ],
                 ),
               ),
@@ -742,6 +812,77 @@ class _PayButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ── Who covered the bill row ──────────────────────────────────────────────
+
+class _WhoPayedRow extends StatefulWidget {
+  const _WhoPayedRow({required this.results, required this.onSelect});
+  final List<SplitResult> results;
+  final ValueChanged<String> onSelect;
+
+  @override
+  State<_WhoPayedRow> createState() => _WhoPayedRowState();
+}
+
+class _WhoPayedRowState extends State<_WhoPayedRow> {
+  String? _selected;
+
+  @override
+  Widget build(BuildContext context) {
+    final gradients = AppColors.personGradients;
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: widget.results.map((r) {
+        final g = gradients[r.person.colorIndex % gradients.length];
+        final isSelected = _selected == r.person.name;
+        return GestureDetector(
+          onTap: () {
+            setState(() => _selected = r.person.name);
+            widget.onSelect(r.person.name);
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              gradient: isSelected
+                  ? LinearGradient(colors: [g[0], g[1]])
+                  : null,
+              color: isSelected ? null : context.colors.surface1,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isSelected ? Colors.transparent : context.colors.borderDefault,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isSelected)
+                  const Padding(
+                    padding: EdgeInsets.only(right: 6),
+                    child: Icon(Icons.check_rounded,
+                        color: Colors.white, size: 14),
+                  ),
+                Text(
+                  r.person.name,
+                  style: TextStyle(
+                    fontFamily: '.SF Pro Text',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: isSelected
+                        ? Colors.white
+                        : context.colors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }

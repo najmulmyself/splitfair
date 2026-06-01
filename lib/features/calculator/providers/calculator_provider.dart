@@ -35,6 +35,8 @@ class CalculatorState {
     this.items,
     this.freeDinerPersonId,
     this.sessionLabel,
+    this.useIndividualTips = false,
+    this.perPersonTipBps = const {},
   });
 
   final Decimal subtotal;
@@ -49,6 +51,9 @@ class CalculatorState {
   final List<SplitItem>? items;
   final String? freeDinerPersonId;
   final String? sessionLabel;
+  /// Per-person tip in basis points (1800 = 18%). Only used when [useIndividualTips].
+  final Map<String, int> perPersonTipBps;
+  final bool useIndividualTips;
 
   /// Returns the default initial state.
   factory CalculatorState.initial() => CalculatorState(
@@ -61,6 +66,8 @@ class CalculatorState {
         roundingMode: RoundingMode.none,
         currencyCode: 'USD',
         people: const [],
+        useIndividualTips: false,
+        perPersonTipBps: const {},
       );
 
   /// Returns a copy with the given fields replaced.
@@ -78,6 +85,8 @@ class CalculatorState {
     String? freeDinerPersonId,
     String? sessionLabel,
     bool clearFreeDiner = false,
+    bool? useIndividualTips,
+    Map<String, int>? perPersonTipBps,
   }) {
     return CalculatorState(
       subtotal: subtotal ?? this.subtotal,
@@ -93,6 +102,8 @@ class CalculatorState {
       freeDinerPersonId:
           clearFreeDiner ? null : freeDinerPersonId ?? this.freeDinerPersonId,
       sessionLabel: sessionLabel ?? this.sessionLabel,
+      useIndividualTips: useIndividualTips ?? this.useIndividualTips,
+      perPersonTipBps: perPersonTipBps ?? this.perPersonTipBps,
     );
   }
 }
@@ -211,6 +222,34 @@ class CalculatorNotifier extends _$CalculatorNotifier {
     }
   }
 
+  /// Toggles individual tips mode on/off.
+  void toggleIndividualTips() {
+    final next = !state.useIndividualTips;
+    // Pre-fill everyone with the current global tip when enabling.
+    final bps = next
+        ? {
+            for (final p in state.people)
+              p.id: (state.tipPercentage * Decimal.fromInt(100))
+                  .round(scale: 0)
+                  .toBigInt()
+                  .toInt()
+          }
+        : <String, int>{};
+    state = state.copyWith(
+        useIndividualTips: next, perPersonTipBps: bps);
+  }
+
+  /// Sets a person's individual tip percentage.
+  void setPersonTip(String personId, Decimal percentage) {
+    final bps = (percentage * Decimal.fromInt(100))
+        .round(scale: 0)
+        .toBigInt()
+        .toInt();
+    final updated = Map<String, int>.from(state.perPersonTipBps)
+      ..[personId] = bps;
+    state = state.copyWith(perPersonTipBps: updated);
+  }
+
   // ── Computed ─────────────────────────────────────────────────
 
   /// Returns true when a valid subtotal is entered and at least one person exists.
@@ -219,21 +258,50 @@ class CalculatorNotifier extends _$CalculatorNotifier {
 
   /// Returns the computed tip amount.
   Decimal get computedTip {
+    if (state.useIndividualTips && state.perPersonTipBps.isNotEmpty) {
+      return results.fold(Decimal.zero, (s, r) => s + r.tipShare);
+    }
     final session = _toSessionSnapshot();
     return ResultCalculator.compute(session).tip;
   }
 
   /// Returns the grand total (subtotal + tax + tip).
   Decimal get grandTotal {
+    if (state.useIndividualTips && state.perPersonTipBps.isNotEmpty) {
+      return results.fold(Decimal.zero, (s, r) => s + r.total);
+    }
     final session = _toSessionSnapshot();
     return ResultCalculator.compute(session).grandTotal;
   }
 
   /// Returns the computed per-person split results.
+  /// When individual tips are active, recalculates each person's tip share.
   List<SplitResult> get results {
     if (!hasValidInput) return [];
     final session = _toSessionSnapshot();
-    return ResultCalculator.compute(session).perPerson;
+    final base = ResultCalculator.compute(session).perPerson;
+    if (!state.useIndividualTips || state.perPersonTipBps.isEmpty) return base;
+
+    // Override each person's tip with their individual rate.
+    final overridden = base.map((r) {
+      final bps = state.perPersonTipBps[r.person.id];
+      if (bps == null) return r;
+      final tipPct = (Decimal.fromInt(bps) / Decimal.fromInt(10000))
+          .toDecimal(scaleOnInfinitePrecision: 10);
+      final base_ = state.tipOnSubtotal
+          ? r.subtotalShare
+          : r.subtotalShare + r.taxShare;
+      final newTip = (base_ * tipPct).round(scale: 2);
+      final newTotal = (r.subtotalShare + r.taxShare + newTip).round(scale: 2);
+      return SplitResult(
+        person: r.person,
+        subtotalShare: r.subtotalShare,
+        taxShare: r.taxShare,
+        tipShare: newTip,
+        total: newTotal,
+      );
+    }).toList();
+    return overridden;
   }
 
   /// In custom mode: true if the sum of entered amounts equals the subtotal.

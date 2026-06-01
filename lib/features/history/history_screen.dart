@@ -1,3 +1,4 @@
+import 'package:decimal/decimal.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -80,6 +81,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _HistoryAppBar(),
+            if (sessions.isNotEmpty) _AnalyticsRow(sessions: sessions),
             Expanded(
               child: sessions.isEmpty
                   ? const _EmptyState()
@@ -715,6 +717,118 @@ class _EmptyState extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Analytics row ─────────────────────────────────────────────────────────
+
+class _AnalyticsRow extends StatelessWidget {
+  const _AnalyticsRow({required this.sessions});
+  final List<SplitSession> sessions;
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final thisMonth = sessions.where((s) =>
+        s.createdAt.year == now.year && s.createdAt.month == now.month);
+
+    final count = thisMonth.length;
+    Decimal totalSpent = Decimal.zero;
+    Decimal tipSum = Decimal.zero;
+    int tipCount = 0;
+
+    for (final s in thisMonth) {
+      final result = ResultCalculator.compute(s);
+      totalSpent += result.grandTotal;
+      final tipPct = Decimal.tryParse(s.tipPercentageRaw);
+      if (tipPct != null && tipPct > Decimal.zero) {
+        tipSum += tipPct;
+        tipCount++;
+      }
+    }
+
+    final avgTip = tipCount > 0
+        ? (tipSum / Decimal.fromInt(tipCount))
+            .toDecimal(scaleOnInfinitePrecision: 1)
+        : Decimal.zero;
+
+    final currency = sessions.isNotEmpty ? sessions.first.currencyCode : 'USD';
+    final monthLabel = DateFormat('MMM').format(now);
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: context.colors.surface1,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.colors.borderDefault),
+      ),
+      child: Row(
+        children: [
+          _StatChip(
+            label: monthLabel,
+            value: '$count ${count == 1 ? 'split' : 'splits'}',
+            icon: Icons.receipt_long_rounded,
+          ),
+          _vDivider(context),
+          _StatChip(
+            label: 'Spent',
+            value: '$currency ${totalSpent.toStringAsFixed(0)}',
+            icon: Icons.attach_money_rounded,
+          ),
+          _vDivider(context),
+          _StatChip(
+            label: 'Avg tip',
+            value: '${avgTip.toStringAsFixed(0)}%',
+            icon: Icons.percent_rounded,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _vDivider(BuildContext context) => Container(
+        width: 1,
+        height: 32,
+        margin: const EdgeInsets.symmetric(horizontal: 12),
+        color: context.colors.borderDefault,
+      );
+}
+
+class _StatChip extends StatelessWidget {
+  const _StatChip(
+      {required this.label, required this.value, required this.icon});
+  final String label;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontFamily: '.SF Pro Display',
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: context.colors.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: TextStyle(
+              fontFamily: '.SF Pro Text',
+              fontSize: 11,
+              color: context.colors.textSecondary,
+            ),
+          ),
+        ],
       ),
     );
   }

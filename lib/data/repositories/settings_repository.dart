@@ -93,6 +93,16 @@ class SettingsRepository {
   Future<void> setThemeMode(String mode) =>
       _prefs.setString(_keyThemeMode, mode);
 
+  // ── Who pays next ─────────────────────────────────────────────
+  static const _keyLastPayer = 'last_payer_name';
+
+  String? get lastPayerName => _prefs.getString(_keyLastPayer);
+
+  Future<void> setLastPayer(String name) =>
+      _prefs.setString(_keyLastPayer, name);
+
+  Future<void> clearLastPayer() => _prefs.remove(_keyLastPayer);
+
   // ── Draft session ─────────────────────────────────────────────
   static const _keyDraft = 'calculator_draft';
 

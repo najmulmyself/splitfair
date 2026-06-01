@@ -6,6 +6,7 @@ import '../../core/utils/haptics.dart';
 import '../../data/models/currency.dart';
 import '../calculator/providers/calculator_provider.dart';
 import 'currency_provider.dart';
+import 'exchange_rate_service.dart';
 
 /// Full-screen currency selector.
 class CurrencySelectorSheet extends ConsumerStatefulWidget {
@@ -19,6 +20,15 @@ class CurrencySelectorSheet extends ConsumerStatefulWidget {
 class _CurrencySelectorSheetState extends ConsumerState<CurrencySelectorSheet> {
   final _searchController = TextEditingController();
   String _query = '';
+  Map<String, double>? _rates;
+
+  @override
+  void initState() {
+    super.initState();
+    ExchangeRateService.instance.getRates().then((r) {
+      if (mounted) setState(() => _rates = r);
+    });
+  }
 
   @override
   void dispose() {
@@ -148,6 +158,7 @@ class _CurrencySelectorSheetState extends ConsumerState<CurrencySelectorSheet> {
                         ...recentList.map((c) => _CurrencyTile(
                               currency: c,
                               isSelected: c.code == selectedCode,
+                              rate: _rates?[c.code],
                               onTap: () => _select(c.code),
                             )),
                         const SizedBox(height: 6),
@@ -162,6 +173,7 @@ class _CurrencySelectorSheetState extends ConsumerState<CurrencySelectorSheet> {
                         return _CurrencyTile(
                           currency: e.value,
                           isSelected: e.value.code == selectedCode,
+                          rate: _rates?[e.value.code],
                           onTap: () => _select(e.value.code),
                           animDelay:
                               Duration(milliseconds: (i * 20).clamp(0, 300)),
@@ -218,12 +230,14 @@ class _CurrencyTile extends StatelessWidget {
     required this.isSelected,
     required this.onTap,
     this.animDelay = Duration.zero,
+    this.rate,
   });
 
   final Currency currency;
   final bool isSelected;
   final VoidCallback onTap;
   final Duration animDelay;
+  final double? rate;
 
   @override
   Widget build(BuildContext context) {
@@ -271,6 +285,19 @@ class _CurrencyTile extends StatelessWidget {
                 ],
               ),
             ),
+
+            // Live rate
+            if (rate != null && currency.code != 'USD') ...[
+              Text(
+                '${rate!.toStringAsFixed(rate! >= 10 ? 1 : 3)}',
+                style: TextStyle(
+                  fontFamily: '.SF Pro Text',
+                  fontSize: 12,
+                  color: context.colors.textTertiary,
+                ),
+              ),
+              const SizedBox(width: 8),
+            ],
 
             // Checkmark
             if (isSelected)

@@ -45,6 +45,13 @@ dependencies:
   # ── IN-APP PURCHASE ─────────────────────────────────────────
   in_app_purchase: ^3.2.0
 
+  # ── PDF EXPORT ──────────────────────────────────────────────
+  pdf: ^3.10.8
+  printing: ^5.12.0
+
+  # ── NETWORKING (live exchange rates) ────────────────────────
+  http: ^1.2.1
+
   # ── UTILITIES ───────────────────────────────────────────────
   package_info_plus: ^9.0.1
   uuid: ^4.5.1
