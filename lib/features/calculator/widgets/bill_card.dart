@@ -189,23 +189,34 @@ class _BillAmountDisplayState extends State<_BillAmountDisplay>
     final (intPart, decPart, hasTypedDec) = _parse(widget.buffer);
     final isEmpty = widget.buffer.isEmpty;
 
+    // Scale font size down as integer digits grow to prevent card overflow.
+    final intDigits = intPart == '0' ? 1 : intPart.length;
+    final double intFontSize = switch (intDigits) {
+      <= 3 => 62.0,
+      4 => 54.0,
+      5 => 46.0,
+      _ => 38.0,
+    };
+    final double decFontSize = (intFontSize * 0.58).ceilToDouble();
+    final double symFontSize = (intFontSize * 0.46).ceilToDouble();
+
     final bigStyle = TextStyle(
       fontFamily: '.SF Pro Rounded',
-      fontSize: 62,
+      fontSize: intFontSize,
       fontWeight: FontWeight.w800,
       height: 1.0,
       color: context.colors.textPrimary,
     );
     final symbolStyle = TextStyle(
       fontFamily: '.SF Pro Rounded',
-      fontSize: 28,
+      fontSize: symFontSize,
       fontWeight: FontWeight.w700,
       height: 1.0,
       color: context.colors.textPrimary,
     );
     final decStyle = TextStyle(
       fontFamily: '.SF Pro Rounded',
-      fontSize: 36,
+      fontSize: decFontSize,
       fontWeight: FontWeight.w700,
       height: 1.0,
       color: context.colors.textPrimary,
@@ -217,12 +228,26 @@ class _BillAmountDisplayState extends State<_BillAmountDisplay>
       color: context.colors.textPrimary.withOpacity(0.18),
     );
 
+    // Cursor widget — reused in two positions.
+    Widget cursorWidget() => AnimatedBuilder(
+          animation: _cursorCtrl,
+          builder: (_, __) => Opacity(
+            opacity: _cursorCtrl.value > 0.5 ? 1.0 : 0.0,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 4, left: 1),
+              child: Text('|',
+                  style: decStyle.copyWith(color: AppColors.primaryViolet)),
+            ),
+          ),
+        );
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
       children: [
         // Currency symbol
         Padding(
-          padding: const EdgeInsets.only(bottom: 6),
+          padding: const EdgeInsets.only(bottom: 5),
           child: Text(widget.currencySymbol,
               style: isEmpty
                   ? symbolStyle.copyWith(
@@ -234,15 +259,16 @@ class _BillAmountDisplayState extends State<_BillAmountDisplay>
         // Integer part
         Text(intPart, style: isEmpty ? emptyStyle : bigStyle),
 
+        // Cursor sits HERE when no decimal typed (next key → integer)
+        if (widget.isEditing && !hasTypedDec) cursorWidget(),
+
         // Decimal part
         Padding(
-          padding: const EdgeInsets.only(bottom: 6),
+          padding: const EdgeInsets.only(bottom: 5),
           child: hasTypedDec
               ? Text(
                   '.${decPart.padRight(2, '0').substring(0, 2)}',
-                  style: decPart.length < 2
-                      ? decStyle // still typing
-                      : decStyle,
+                  style: decStyle,
                 )
               : Text('.00',
                   style: isEmpty
@@ -251,19 +277,8 @@ class _BillAmountDisplayState extends State<_BillAmountDisplay>
                       : dimDecStyle),
         ),
 
-        // Cursor
-        if (widget.isEditing)
-          AnimatedBuilder(
-            animation: _cursorCtrl,
-            builder: (_, __) => Opacity(
-              opacity: _cursorCtrl.value > 0.5 ? 1.0 : 0.0,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 6, left: 2),
-                child: Text('|',
-                    style: decStyle.copyWith(color: AppColors.primaryViolet)),
-              ),
-            ),
-          ),
+        // Cursor sits HERE when decimal is being typed (next key → cents)
+        if (widget.isEditing && hasTypedDec) cursorWidget(),
       ],
     );
   }
