@@ -13,6 +13,7 @@ import '../../data/models/split_session.dart';
 import '../../data/sources/currency_data_source.dart';
 import '../currency/currency_provider.dart';
 import '../history/history_provider.dart';
+import '../settings/settings_provider.dart';
 import 'providers/calculator_provider.dart';
 import 'widgets/bill_card.dart';
 import 'widgets/numpad.dart';
@@ -143,7 +144,9 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       builder: (ctx) => _AddPersonSheet(controller: controller),
     );
     if (name != null && name.trim().isNotEmpty) {
-      ref.read(calculatorNotifierProvider.notifier).addPerson(name.trim());
+      final trimmed = name.trim();
+      ref.read(calculatorNotifierProvider.notifier).addPerson(trimmed);
+      ref.read(recentNamesRepositoryProvider).add(trimmed);
     }
   }
 
@@ -288,9 +291,21 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                           curve: Curves.easeOut),
                     ],
 
+                    // Rounding row (shown when results exist)
+                    if (!_isEditing && hasResults) ...[
+                      const SizedBox(height: 10),
+                      _RoundingRow(
+                        mode: calcState.roundingMode,
+                        onChanged: (mode) {
+                          notifier.setRoundingMode(mode);
+                          Haptics.selection();
+                        },
+                      ),
+                    ],
+
                     // Result section
                     if (!_isEditing && hasResults) ...[
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 10),
                       ResultSection(
                         results: notifier.results,
                         grandTotal: notifier.grandTotal,
@@ -303,7 +318,14 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                     // Hint text when no people yet
                     if (!_isEditing && !hasPeople) ...[
                       const SizedBox(height: 16),
-                      _HintCard(),
+                      _HintCard(
+                        onJustMe: () {
+                          final trimmed = 'Me';
+                          ref
+                              .read(calculatorNotifierProvider.notifier)
+                              .addPerson(trimmed);
+                        },
+                      ),
                     ],
 
                     const SizedBox(height: 16),
@@ -505,10 +527,13 @@ class _Circle extends StatelessWidget {
 // ── Hint card ─────────────────────────────────────────────────────────────
 
 class _HintCard extends StatelessWidget {
+  const _HintCard({required this.onJustMe});
+  final VoidCallback onJustMe;
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
       decoration: BoxDecoration(
         color: context.colors.surface1.withOpacity(0.5),
         borderRadius: BorderRadius.circular(16),
@@ -517,19 +542,59 @@ class _HintCard extends StatelessWidget {
           style: BorderStyle.solid,
         ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Icon(Icons.add_circle_outline_rounded,
-              color: AppColors.primaryViolet.withOpacity(0.6), size: 18),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              "Tap a number, then add who's at the table.\nWe'll handle the math.",
-              style: TextStyle(
-                fontFamily: '.SF Pro Text',
-                fontSize: 14,
-                height: 1.5,
-                color: context.colors.textSecondary,
+          Row(
+            children: [
+              Icon(Icons.add_circle_outline_rounded,
+                  color: AppColors.primaryViolet.withOpacity(0.6), size: 18),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  "Add people to split the bill.",
+                  style: TextStyle(
+                    fontFamily: '.SF Pro Text',
+                    fontSize: 14,
+                    height: 1.5,
+                    color: context.colors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          GestureDetector(
+            onTap: () {
+              Haptics.impact();
+              onJustMe();
+            },
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.primaryViolet.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                    color: AppColors.primaryViolet.withOpacity(0.3)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.person_rounded,
+                      size: 16,
+                      color: AppColors.primaryViolet.withOpacity(0.8)),
+                  const SizedBox(width: 8),
+                  Text(
+                    "Just me — solo tip calc",
+                    style: TextStyle(
+                      fontFamily: '.SF Pro Text',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.primaryViolet,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -640,16 +705,23 @@ class _DisabledButton extends StatelessWidget {
 
 // ── Add person bottom sheet ───────────────────────────────────────────────
 
-// ignore: unused_element
-class _AddPersonSheet extends StatefulWidget {
+class _AddPersonSheet extends ConsumerStatefulWidget {
   const _AddPersonSheet({required this.controller});
   final TextEditingController controller;
 
   @override
-  State<_AddPersonSheet> createState() => _AddPersonSheetState();
+  ConsumerState<_AddPersonSheet> createState() => _AddPersonSheetState();
 }
 
-class _AddPersonSheetState extends State<_AddPersonSheet> {
+class _AddPersonSheetState extends ConsumerState<_AddPersonSheet> {
+  List<String> _recentNames = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _recentNames = ref.read(recentNamesRepositoryProvider).getAll();
+  }
+
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
@@ -657,7 +729,7 @@ class _AddPersonSheetState extends State<_AddPersonSheet> {
       padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + bottom),
       decoration: BoxDecoration(
         color: context.colors.surface1,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -684,6 +756,44 @@ class _AddPersonSheetState extends State<_AddPersonSheet> {
               color: context.colors.textPrimary,
             ),
           ),
+          // Recent names chips
+          if (_recentNames.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 34,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: _recentNames.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, i) {
+                  final n = _recentNames[i];
+                  return GestureDetector(
+                    onTap: () => Navigator.pop(context, n),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: AppColors.primaryViolet.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(17),
+                        border: Border.all(
+                            color:
+                                AppColors.primaryViolet.withOpacity(0.3)),
+                      ),
+                      child: Text(
+                        n,
+                        style: TextStyle(
+                          fontFamily: '.SF Pro Text',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.primaryViolet,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
           const SizedBox(height: 14),
           TextField(
             controller: widget.controller,
@@ -1067,6 +1177,105 @@ class _CustomTipSheetState extends State<_CustomTipSheet> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Rounding row ──────────────────────────────────────────────────────────
+
+class _RoundingRow extends StatelessWidget {
+  const _RoundingRow({required this.mode, required this.onChanged});
+  final RoundingMode mode;
+  final ValueChanged<RoundingMode> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(
+            'ROUND UP EACH SHARE',
+            style: TextStyle(
+              fontFamily: '.SF Pro Text',
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: context.colors.textSecondary,
+              letterSpacing: 1.2,
+            ),
+          ),
+        ),
+        Row(
+          children: [
+            _RoundChip(
+              label: 'Off',
+              selected: mode == RoundingMode.none,
+              onTap: () => onChanged(RoundingMode.none),
+            ),
+            const SizedBox(width: 8),
+            _RoundChip(
+              label: '+¢50',
+              selected: mode == RoundingMode.up50c,
+              onTap: () => onChanged(RoundingMode.up50c),
+            ),
+            const SizedBox(width: 8),
+            _RoundChip(
+              label: '+\$1',
+              selected: mode == RoundingMode.up1,
+              onTap: () => onChanged(RoundingMode.up1),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _RoundChip extends StatelessWidget {
+  const _RoundChip(
+      {required this.label, required this.selected, required this.onTap});
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color:
+              selected ? AppColors.primaryViolet : context.colors.surface2,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected
+                ? AppColors.primaryViolet
+                : context.colors.borderDefault,
+          ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: AppColors.primaryViolet.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  )
+                ]
+              : [],
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontFamily: '.SF Pro Text',
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color:
+                selected ? Colors.white : context.colors.textSecondary,
+          ),
+        ),
       ),
     );
   }

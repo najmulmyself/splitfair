@@ -11,7 +11,11 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/haptics.dart';
 import '../../data/models/split_result.dart';
+import '../../shared/widgets/admob/ad_config.dart';
+import '../../shared/widgets/admob/banner_ad_widget.dart';
+import '../../shared/widgets/admob/interstitial_ad_service.dart';
 import '../calculator/providers/calculator_provider.dart';
+import '../settings/settings_provider.dart';
 
 /// Full-screen Share Results view.
 class ShareSheet extends ConsumerStatefulWidget {
@@ -23,6 +27,18 @@ class ShareSheet extends ConsumerStatefulWidget {
 
 class _ShareSheetState extends ConsumerState<ShareSheet> {
   final _screenshotController = ScreenshotController();
+
+  bool get _adsEnabled {
+    final repo = ref.read(settingsRepositoryProvider);
+    final isPro = ref.read(settingsNotifierProvider).isPro;
+    return !isPro && repo.sessionCount >= AdConfig.adFreeSessionThreshold;
+  }
+
+  Future<void> _triggerInterstitial() async {
+    if (!_adsEnabled) return;
+    await Future.delayed(const Duration(milliseconds: 600));
+    await InterstitialAdService.instance.show();
+  }
 
   // ── Helpers ───────────────────────────────────────────────────
 
@@ -56,6 +72,7 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
 
   Future<void> _shareText(String text) async {
     await SharePlus.instance.share(ShareParams(text: text));
+    _triggerInterstitial();
   }
 
   Future<void> _shareImage(String text) async {
@@ -67,6 +84,7 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
     final xFile =
         XFile.fromData(bytes, mimeType: 'image/png', name: 'splitfair.png');
     await SharePlus.instance.share(ShareParams(files: [xFile], text: text));
+    _triggerInterstitial();
   }
 
   Future<void> _copyToClipboard(String text) async {
@@ -115,6 +133,14 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
         mode: LaunchMode.externalApplication);
   }
 
+  Future<void> _openBkash(String summary) async {
+    final uri = Uri.parse(
+        'whatsapp://send?text=${Uri.encodeComponent(summary)}');
+    if (!await launchUrl(uri)) {
+      await _copyToClipboard(summary);
+    }
+  }
+
   // ── Build ─────────────────────────────────────────────────────
 
   @override
@@ -133,8 +159,13 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
     final textSummary = _buildTextSummary(
         results, grandTotal, currencyCode, sessionTitle, tipPct);
 
+    final adsEnabled = _adsEnabled;
+
     return Scaffold(
       backgroundColor: context.colors.bgBase,
+      bottomNavigationBar: adsEnabled
+          ? const BannerAdWidget()
+          : null,
       body: SafeArea(
         child: Column(
           children: [
@@ -208,6 +239,7 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
                           onTap: () {
                             Haptics.impact();
                             _openWhatsApp(textSummary);
+                            _triggerInterstitial();
                           },
                         ),
                         _SendButton(
@@ -272,6 +304,10 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
                       onPayPal: () {
                         Haptics.impact();
                         _openPayPal(sessionTitle);
+                      },
+                      onBkash: () {
+                        Haptics.impact();
+                        _openBkash(textSummary);
                       },
                     ).animate().fade(duration: 300.ms, delay: 200.ms).slideY(
                         begin: 0.1,
@@ -633,11 +669,13 @@ class _PaymentButtons extends StatelessWidget {
     required this.onVenmo,
     required this.onCashApp,
     required this.onPayPal,
+    required this.onBkash,
   });
 
   final VoidCallback onVenmo;
   final VoidCallback onCashApp;
   final VoidCallback onPayPal;
+  final VoidCallback onBkash;
 
   @override
   Widget build(BuildContext context) {
@@ -649,7 +687,7 @@ class _PaymentButtons extends StatelessWidget {
         const SizedBox(width: 10),
         _PayButton(label: 'PayPal', onTap: onPayPal),
         const SizedBox(width: 10),
-        _PayButton(label: 'bKash', onTap: () {}),
+        _PayButton(label: 'bKash', onTap: onBkash),
       ],
     );
   }
