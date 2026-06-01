@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/haptics.dart';
 import 'iap_provider.dart';
@@ -24,7 +25,7 @@ class ProUnlockSheet extends ConsumerWidget {
               top: 8,
               right: 12,
               child: GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
+                onTap: () => context.pop(),
                 child: Container(
                   width: 32,
                   height: 32,
