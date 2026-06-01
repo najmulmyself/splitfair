@@ -13,6 +13,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/haptics.dart';
 import '../../data/models/split_result.dart';
+import '../../data/sources/tip_guide_data_source.dart';
 import '../../shared/widgets/admob/ad_config.dart';
 import '../../shared/widgets/admob/banner_ad_widget.dart';
 import '../../shared/widgets/admob/interstitial_ad_service.dart';
@@ -618,6 +619,9 @@ class _ResultCard extends StatelessWidget {
                 ),
               ],
             ),
+
+            // Tipping etiquette badge
+            _TipEtiquetteBadge(currencyCode: currencyCode),
           ],
         ),
       ),
@@ -883,6 +887,109 @@ class _WhoPayedRowState extends State<_WhoPayedRow> {
           ),
         );
       }).toList(),
+    );
+  }
+}
+
+// ── Tipping etiquette badge ───────────────────────────────────────────────
+
+/// Maps ISO currency code → country name in TipGuideDataSource.
+const _kCurrencyCountry = {
+  'USD': 'United States',
+  'GBP': 'United Kingdom',
+  'CAD': 'Canada',
+  'AUD': 'Australia',
+  'JPY': 'Japan',
+  'EUR': 'Germany',
+  'CNY': 'China',
+  'INR': 'India',
+  'BDT': 'Bangladesh',
+  'SGD': 'Singapore',
+  'AED': 'UAE',
+  'MXN': 'Mexico',
+  'BRL': 'Brazil',
+  'KRW': 'South Korea',
+  'THB': 'Thailand',
+  'TRY': 'Turkey',
+  'CHF': 'Switzerland',
+};
+
+class _TipEtiquetteBadge extends StatefulWidget {
+  const _TipEtiquetteBadge({required this.currencyCode});
+  final String currencyCode;
+
+  @override
+  State<_TipEtiquetteBadge> createState() => _TipEtiquetteBadgeState();
+}
+
+class _TipEtiquetteBadgeState extends State<_TipEtiquetteBadge> {
+  CountryTipGuide? _guide;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final countryName = _kCurrencyCountry[widget.currencyCode];
+    if (countryName == null) return;
+    final all = await TipGuideDataSource.instance.loadAll();
+    final match = all.where((c) => c.country == countryName).toList();
+    if (match.isNotEmpty && mounted) {
+      setState(() => _guide = match.first);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_guide == null) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 14),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.10),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white.withOpacity(0.18)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(_guide!.flag, style: const TextStyle(fontSize: 16)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${_guide!.country} · ${_guide!.typical}',
+                    style: const TextStyle(
+                      fontFamily: '.SF Pro Text',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white70,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                  if (_guide!.note != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      _guide!.note!,
+                      style: const TextStyle(
+                        fontFamily: '.SF Pro Text',
+                        fontSize: 11,
+                        color: Colors.white54,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
