@@ -141,6 +141,14 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
     }
   }
 
+  Future<void> _openZelle() async {
+    final uri = Uri.parse('zelle://');
+    if (!await launchUrl(uri)) {
+      await launchUrl(Uri.parse('https://zellepay.com'),
+          mode: LaunchMode.externalApplication);
+    }
+  }
+
   // ── Build ─────────────────────────────────────────────────────
 
   @override
@@ -308,6 +316,10 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
                       onBkash: () {
                         Haptics.impact();
                         _openBkash(textSummary);
+                      },
+                      onZelle: () {
+                        Haptics.impact();
+                        _openZelle();
                       },
                     ).animate().fade(duration: 300.ms, delay: 200.ms).slideY(
                         begin: 0.1,
@@ -670,25 +682,33 @@ class _PaymentButtons extends StatelessWidget {
     required this.onCashApp,
     required this.onPayPal,
     required this.onBkash,
+    required this.onZelle,
   });
 
   final VoidCallback onVenmo;
   final VoidCallback onCashApp;
   final VoidCallback onPayPal;
   final VoidCallback onBkash;
+  final VoidCallback onZelle;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _PayButton(label: 'Venmo', onTap: onVenmo),
-        const SizedBox(width: 10),
-        _PayButton(label: 'Cash App', onTap: onCashApp),
-        const SizedBox(width: 10),
-        _PayButton(label: 'PayPal', onTap: onPayPal),
-        const SizedBox(width: 10),
-        _PayButton(label: 'bKash', onTap: onBkash),
-      ],
+    // Scrollable so adding more apps never overflows
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          _PayButton(label: 'Venmo', onTap: onVenmo),
+          const SizedBox(width: 10),
+          _PayButton(label: 'Cash App', onTap: onCashApp),
+          const SizedBox(width: 10),
+          _PayButton(label: 'PayPal', onTap: onPayPal),
+          const SizedBox(width: 10),
+          _PayButton(label: 'Zelle', onTap: onZelle),
+          const SizedBox(width: 10),
+          _PayButton(label: 'bKash', onTap: onBkash),
+        ],
+      ),
     );
   }
 }
@@ -700,25 +720,24 @@ class _PayButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          height: 42,
-          decoration: BoxDecoration(
-            color: context.colors.surface1,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: context.colors.borderDefault),
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontFamily: '.SF Pro Text',
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: context.colors.textPrimary,
-              ),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 80,
+        height: 42,
+        decoration: BoxDecoration(
+          color: context.colors.surface1,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: context.colors.borderDefault),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontFamily: '.SF Pro Text',
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: context.colors.textPrimary,
             ),
           ),
         ),

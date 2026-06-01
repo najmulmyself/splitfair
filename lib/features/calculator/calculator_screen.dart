@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,6 +15,7 @@ import '../../data/sources/currency_data_source.dart';
 import '../currency/currency_provider.dart';
 import '../history/history_provider.dart';
 import '../settings/settings_provider.dart';
+import '../tip_guide/tip_guide_sheet.dart';
 import 'providers/calculator_provider.dart';
 import 'widgets/bill_card.dart';
 import 'widgets/numpad.dart';
@@ -47,15 +49,84 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   @override
   void initState() {
     super.initState();
-    // Sync calculator currency from settings on first load
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final settingsCurrency = ref.read(currencyNotifierProvider);
       ref
           .read(calculatorNotifierProvider.notifier)
           .setCurrency(settingsCurrency);
       _loadActiveCurrencyByCode(settingsCurrency);
+      _checkDraft();
     });
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
+  }
+
+  // ── Draft save / restore ──────────────────────────────────────
+
+  void _saveDraft() {
+    final s = ref.read(calculatorNotifierProvider);
+    if (s.subtotal <= Decimal.zero) return;
+    final data = {
+      'subtotal': s.subtotal.toString(),
+      'tax': s.tax.toString(),
+      'taxMode': s.taxInputMode.name,
+      'tip': s.tipPercentage.toString(),
+      'tipOnSubtotal': s.tipOnSubtotal,
+      'splitMode': s.splitMode.name,
+      'currency': s.currencyCode,
+      'people': s.people.map((p) => p.name).toList(),
+    };
+    ref.read(settingsRepositoryProvider).saveDraft(json.encode(data));
+  }
+
+  Future<void> _checkDraft() async {
+    final repo = ref.read(settingsRepositoryProvider);
+    final raw = repo.draft;
+    if (raw == null) return;
+    try {
+      final data = json.decode(raw) as Map<String, dynamic>;
+      final subtotal = data['subtotal'] as String? ?? '0';
+      if ((Decimal.tryParse(subtotal) ?? Decimal.zero) <= Decimal.zero) return;
+      final people = (data['people'] as List?)?.cast<String>() ?? [];
+      if (!mounted) return;
+      final resume = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => _DraftRestoreDialog(
+          subtotal: subtotal,
+          currency: data['currency'] as String? ?? 'USD',
+          peopleCount: people.length,
+        ),
+      );
+      if (resume == true && mounted) {
+        _restoreDraft(data, people);
+      } else {
+        repo.clearDraft();
+      }
+    } catch (_) {
+      repo.clearDraft();
+    }
+  }
+
+  void _restoreDraft(Map<String, dynamic> data, List<String> people) {
+    final notifier = ref.read(calculatorNotifierProvider.notifier);
+    final subtotal = Decimal.tryParse(data['subtotal'] as String? ?? '0') ?? Decimal.zero;
+    final tax = Decimal.tryParse(data['tax'] as String? ?? '0') ?? Decimal.zero;
+    final tip = Decimal.tryParse(data['tip'] as String? ?? '18') ?? Decimal.fromInt(18);
+    notifier.setSubtotal(subtotal);
+    notifier.setTax(tax);
+    notifier.setTipPercentage(tip);
+    notifier.setTipOnSubtotal((data['tipOnSubtotal'] as bool?) ?? true);
+    notifier.setCurrency(data['currency'] as String? ?? 'USD');
+    if ((data['taxMode'] as String?) == 'percent') {
+      notifier.setTaxMode(TaxInputMode.percent);
+    }
+    for (final name in people) {
+      notifier.addPerson(name);
+    }
+    setState(() {
+      _billBuffer = subtotal > Decimal.zero
+          ? subtotal.toStringAsFixed(2).replaceAll(RegExp(r'\.?0+$'), '')
+          : '';
+    });
   }
 
   Future<void> _loadActiveCurrencyByCode(String code) async {
@@ -150,6 +221,29 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     }
   }
 
+  Future<void> _showTipGuide() async {
+    Haptics.impact();
+    final midPct = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.75,
+        minChildSize: 0.4,
+        maxChildSize: 0.95,
+        expand: false,
+        builder: (_, ctrl) => const TipGuideSheet(),
+      ),
+    );
+    if (midPct != null) {
+      final d = Decimal.tryParse(midPct);
+      if (d != null) {
+        ref.read(calculatorNotifierProvider.notifier).setTipPercentage(d);
+        Haptics.selection();
+      }
+    }
+  }
+
   Future<void> _showCustomTipDialog() async {
     Haptics.impact();
     final result = await showModalBottomSheet<Decimal>(
@@ -193,9 +287,14 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // React to currency changes (e.g. after returning from currency selector)
+    // React to currency changes
     ref.listen<String>(currencyNotifierProvider, (prev, next) {
       if (prev != next) _loadActiveCurrencyByCode(next);
+    });
+
+    // Auto-save draft on every calculator state change
+    ref.listen<CalculatorState>(calculatorNotifierProvider, (prev, next) {
+      _saveDraft();
     });
 
     final calcState = ref.watch(calculatorNotifierProvider);
@@ -284,6 +383,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                           Haptics.selection();
                         },
                         onMoreTap: _showCustomTipDialog,
+                        onGuideTap: _showTipGuide,
                       ).animate().fade(duration: 280.ms).slideY(
                           begin: 0.08,
                           end: 0,
@@ -373,6 +473,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                         await ref
                             .read(historyNotifierProvider.notifier)
                             .save(session);
+                        ref.read(settingsRepositoryProvider).clearDraft();
                         if (context.mounted) {
                           context.push(AppRoutes.share);
                         }
@@ -1277,6 +1378,63 @@ class _RoundChip extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ── Draft restore dialog ──────────────────────────────────────────────────
+
+class _DraftRestoreDialog extends StatelessWidget {
+  const _DraftRestoreDialog({
+    required this.subtotal,
+    required this.currency,
+    required this.peopleCount,
+  });
+  final String subtotal;
+  final String currency;
+  final int peopleCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: context.colors.surface1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Text(
+        'Continue last session?',
+        style: TextStyle(
+          fontFamily: '.SF Pro Display',
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          color: context.colors.textPrimary,
+        ),
+      ),
+      content: Text(
+        '$currency $subtotal · $peopleCount ${peopleCount == 1 ? 'person' : 'people'}',
+        style: TextStyle(
+          fontFamily: '.SF Pro Text',
+          fontSize: 14,
+          color: context.colors.textSecondary,
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: Text(
+            'Start fresh',
+            style: TextStyle(color: context.colors.textSecondary),
+          ),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text(
+            'Continue',
+            style: TextStyle(
+              color: AppColors.primaryViolet,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

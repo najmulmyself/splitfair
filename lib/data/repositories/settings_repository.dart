@@ -92,4 +92,13 @@ class SettingsRepository {
 
   Future<void> setThemeMode(String mode) =>
       _prefs.setString(_keyThemeMode, mode);
+
+  // ── Draft session ─────────────────────────────────────────────
+  static const _keyDraft = 'calculator_draft';
+
+  String? get draft => _prefs.getString(_keyDraft);
+
+  Future<void> saveDraft(String json) => _prefs.setString(_keyDraft, json);
+
+  Future<void> clearDraft() => _prefs.remove(_keyDraft);
 }

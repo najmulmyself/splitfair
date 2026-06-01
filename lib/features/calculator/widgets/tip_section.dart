@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 
 const _kPresets = [10, 15, 18, 20, 25];
+const _kLabels = ['Poor', 'Fair', 'Good', 'Great', 'Best'];
 
-/// Tip percentage preset chips + "calculate on subtotal / total" toggle.
+/// Tip percentage preset chips + "calculate on subtotal / total" toggle
+/// + country tipping guide link.
 class TipSection extends StatelessWidget {
   const TipSection({
     super.key,
@@ -13,6 +15,7 @@ class TipSection extends StatelessWidget {
     required this.onTipSelected,
     required this.onToggleTipBase,
     required this.onMoreTap,
+    this.onGuideTap,
   });
 
   final Decimal selectedTip;
@@ -20,6 +23,7 @@ class TipSection extends StatelessWidget {
   final ValueChanged<Decimal> onTipSelected;
   final ValueChanged<bool> onToggleTipBase;
   final VoidCallback onMoreTap;
+  final VoidCallback? onGuideTap;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +32,7 @@ class TipSection extends StatelessWidget {
       children: [
         // ── Section label ─────────────────────────────────────
         Padding(
-          padding: EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.only(bottom: 8),
           child: Text(
             'TIP',
             style: TextStyle(
@@ -45,7 +49,9 @@ class TipSection extends StatelessWidget {
         Row(
           mainAxisSize: MainAxisSize.max,
           children: [
-            ..._kPresets.map((pct) {
+            ..._kPresets.asMap().entries.map((e) {
+              final i = e.key;
+              final pct = e.value;
               final d = Decimal.fromInt(pct);
               final isSelected = selectedTip == d;
               return Expanded(
@@ -53,6 +59,7 @@ class TipSection extends StatelessWidget {
                   padding: const EdgeInsets.only(right: 6),
                   child: _TipChip(
                     label: '$pct%',
+                    sublabel: _kLabels[i],
                     selected: isSelected,
                     onTap: () => onTipSelected(d),
                   ),
@@ -66,19 +73,40 @@ class TipSection extends StatelessWidget {
         const SizedBox(height: 12),
 
         // ── Calculate tip on ──────────────────────────────────
-        Padding(
-          padding: EdgeInsets.only(bottom: 8),
-          child: Text(
-            'CALCULATE TIP ON',
-            style: TextStyle(
-              fontFamily: '.SF Pro Text',
-              fontSize: 10,
-              fontWeight: FontWeight.w600,
-              color: context.colors.textSecondary,
-              letterSpacing: 1.2,
+        Row(
+          children: [
+            Text(
+              'CALCULATE TIP ON',
+              style: TextStyle(
+                fontFamily: '.SF Pro Text',
+                fontSize: 10,
+                fontWeight: FontWeight.w600,
+                color: context.colors.textSecondary,
+                letterSpacing: 1.2,
+              ),
             ),
-          ),
+            const Spacer(),
+            if (onGuideTap != null)
+              GestureDetector(
+                onTap: onGuideTap,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '🌍 Tip guide',
+                      style: TextStyle(
+                        fontFamily: '.SF Pro Text',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.primaryViolet,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
         ),
+        const SizedBox(height: 8),
         _TipBaseToggle(
           onSubtotal: tipOnSubtotal,
           onChanged: onToggleTipBase,
@@ -93,11 +121,13 @@ class TipSection extends StatelessWidget {
 class _TipChip extends StatelessWidget {
   const _TipChip({
     required this.label,
+    required this.sublabel,
     required this.selected,
     required this.onTap,
   });
 
   final String label;
+  final String sublabel;
   final bool selected;
   final VoidCallback onTap;
 
@@ -107,12 +137,14 @@ class _TipChip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 7),
         decoration: BoxDecoration(
           color: selected ? AppColors.primaryViolet : context.colors.surface2,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: selected ? AppColors.primaryViolet : context.colors.borderDefault,
+            color: selected
+                ? AppColors.primaryViolet
+                : context.colors.borderDefault,
           ),
           boxShadow: selected
               ? [
@@ -124,16 +156,31 @@ class _TipChip extends StatelessWidget {
                 ]
               : [],
         ),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              fontFamily: '.SF Pro Text',
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: selected ? Colors.white : context.colors.textSecondary,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: '.SF Pro Text',
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: selected ? Colors.white : context.colors.textPrimary,
+              ),
             ),
-          ),
+            const SizedBox(height: 2),
+            Text(
+              sublabel,
+              style: TextStyle(
+                fontFamily: '.SF Pro Text',
+                fontSize: 9,
+                fontWeight: FontWeight.w400,
+                color: selected
+                    ? Colors.white.withOpacity(0.75)
+                    : context.colors.textTertiary,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -251,7 +298,9 @@ class _Segment extends StatelessWidget {
               fontFamily: '.SF Pro Text',
               fontSize: 14,
               fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-              color: active ? context.colors.textPrimary : context.colors.textSecondary,
+              color: active
+                  ? context.colors.textPrimary
+                  : context.colors.textSecondary,
             ),
           ),
         ),
