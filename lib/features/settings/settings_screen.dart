@@ -89,6 +89,24 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                   ]),
                   const SizedBox(height: 20),
+                  if (!iapState.isPro) ...[
+                    _SectionLabel('UPGRADE'),
+                    _ProUpgradeCard(
+                      isLoading: iapState.isPurchasing,
+                      onTap: () => context.push(AppRoutes.proUnlock),
+                    ),
+                    const SizedBox(height: 20),
+                  ] else ...[
+                    _SectionLabel('UPGRADE'),
+                    _SettingsCard(children: [
+                      _NavRow(
+                        label: '✓ SplitFair Pro',
+                        trailing: 'Active',
+                        onTap: () {},
+                      ),
+                    ]),
+                    const SizedBox(height: 20),
+                  ],
                   _SectionLabel('SUPPORT'),
                   _SettingsCard(children: [
                     _NavRow(
@@ -758,6 +776,95 @@ class _TipOption extends StatelessWidget {
             if (isSelected)
               const Icon(Icons.check_rounded,
                   color: AppColors.primaryViolet, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Pro upgrade card ──────────────────────────────────────────────────────
+
+class _ProUpgradeCard extends StatelessWidget {
+  const _ProUpgradeCard({required this.isLoading, required this.onTap});
+  final bool isLoading;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF2D1B8E), Color(0xFF7C5CFF)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primaryViolet.withOpacity(0.35),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            const Text('⭐', style: TextStyle(fontSize: 28)),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Upgrade to Pro',
+                    style: TextStyle(
+                      fontFamily: '.SF Pro Display',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  const Text(
+                    'No ads · PDF export · Unlimited history',
+                    style: TextStyle(
+                      fontFamily: '.SF Pro Text',
+                      fontSize: 12,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: isLoading
+                  ? const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.primaryViolet),
+                    )
+                  : const Text(
+                      '\$2.99',
+                      style: TextStyle(
+                        fontFamily: '.SF Pro Text',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primaryViolet,
+                      ),
+                    ),
+            ),
           ],
         ),
       ),

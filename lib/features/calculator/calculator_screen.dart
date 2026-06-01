@@ -57,6 +57,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
           .setCurrency(settingsCurrency);
       _loadActiveCurrencyByCode(settingsCurrency);
       _checkDraft();
+      _incrementSessionAndMaybeShowPro();
     });
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
   }
@@ -77,6 +78,16 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       'people': s.people.map((p) => p.name).toList(),
     };
     ref.read(settingsRepositoryProvider).saveDraft(json.encode(data));
+  }
+
+  Future<void> _incrementSessionAndMaybeShowPro() async {
+    final repo = ref.read(settingsRepositoryProvider);
+    await repo.incrementSessionCount();
+    final isPro = ref.read(settingsNotifierProvider).isPro;
+    if (!isPro && repo.sessionCount == 3) {
+      await Future.delayed(const Duration(milliseconds: 800));
+      if (mounted) context.push(AppRoutes.proUnlock);
+    }
   }
 
   Future<void> _checkDraft() async {
