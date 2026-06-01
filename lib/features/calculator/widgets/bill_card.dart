@@ -190,21 +190,21 @@ class _BillAmountDisplayState extends State<_BillAmountDisplay>
     final isEmpty = widget.buffer.isEmpty;
 
     final bigStyle = TextStyle(
-      fontFamily: 'AppFont',
+      fontFamily: '.SF Pro Rounded',
       fontSize: 62,
       fontWeight: FontWeight.w800,
       height: 1.0,
       color: context.colors.textPrimary,
     );
     final symbolStyle = TextStyle(
-      fontFamily: 'AppFont',
+      fontFamily: '.SF Pro Rounded',
       fontSize: 28,
       fontWeight: FontWeight.w700,
       height: 1.0,
       color: context.colors.textPrimary,
     );
     final decStyle = TextStyle(
-      fontFamily: 'AppFont',
+      fontFamily: '.SF Pro Rounded',
       fontSize: 36,
       fontWeight: FontWeight.w700,
       height: 1.0,

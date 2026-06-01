@@ -174,9 +174,15 @@ class _PersonResultCard extends StatelessWidget {
     final isLowest = result.isLowest;
     final isHighest = result.isHighest;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     Color? cardBg;
-    if (isLowest) cardBg = const Color(0xFF0D2820);
-    if (isHighest) cardBg = const Color(0xFF2A0F18);
+    Color amountColor = context.colors.textPrimary;
+    if (isLowest) {
+      cardBg = isDark ? const Color(0xFF0D2820) : const Color(0xFFE6FBF5);
+    }
+    if (isHighest) {
+      cardBg = isDark ? const Color(0xFF2A0F18) : const Color(0xFFFFEDF3);
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -267,7 +273,7 @@ class _PersonResultCard extends StatelessWidget {
           Text(
             '$currencySymbol${result.total.toStringAsFixed(2)}',
             style: TextStyle(
-              fontFamily: 'AppFont',
+              fontFamily: '.SF Pro Rounded',
               fontSize: 24,
               fontWeight: FontWeight.w700,
               color: context.colors.textPrimary,
