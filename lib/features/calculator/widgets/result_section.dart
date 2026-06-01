@@ -408,7 +408,7 @@ class _IndividualTipControl extends StatelessWidget {
             child: Text(
               _isCustom
                   ? '${currentPct.toStringAsFixed(0)}%'
-                  : 'Custom',
+                  : '···',
               style: TextStyle(
                 fontFamily: '.SF Pro Text',
                 fontSize: 12,
