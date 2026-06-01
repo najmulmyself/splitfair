@@ -98,7 +98,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bgBase,
+      backgroundColor: context.colors.bgBase,
       body: Stack(
         children: [
           // ── Mesh background ─────────────────────────────────
@@ -182,13 +182,13 @@ class _MeshBackground extends StatelessWidget {
       children: [
         // Base gradient
         Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: RadialGradient(
               center: Alignment(0, -0.35),
               radius: 1.1,
               colors: [
                 Color(0xFF16103A),
-                AppColors.bgBase,
+                context.colors.bgBase,
               ],
             ),
           ),
@@ -252,21 +252,21 @@ class _TopNav extends StatelessWidget {
               ignoring: !showBack,
               child: TextButton.icon(
                 onPressed: onBack,
-                icon: const Icon(
+                icon: Icon(
                   Icons.arrow_back_ios_new_rounded,
                   size: 14,
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                 ),
-                label: const Text(
+                label: Text(
                   'Back',
                   style: TextStyle(
                     fontFamily: '.SF Pro Text',
                     fontSize: 15,
-                    color: AppColors.textSecondary,
+                    color: context.colors.textSecondary,
                   ),
                 ),
                 style: TextButton.styleFrom(
-                  foregroundColor: AppColors.textSecondary,
+                  foregroundColor: context.colors.textSecondary,
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                 ),
               ),
@@ -277,15 +277,15 @@ class _TopNav extends StatelessWidget {
           TextButton(
             onPressed: onSkip,
             style: TextButton.styleFrom(
-              foregroundColor: AppColors.textSecondary,
+              foregroundColor: context.colors.textSecondary,
               padding: const EdgeInsets.symmetric(horizontal: 8),
             ),
-            child: const Text(
+            child: Text(
               'Skip',
               style: TextStyle(
                 fontFamily: '.SF Pro Text',
                 fontSize: 15,
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
               ),
             ),
           ),
@@ -338,11 +338,11 @@ class _BottomContent extends StatelessWidget {
             child: Text(
               content.title,
               key: ValueKey('title_$page'),
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: '.SF Pro Display',
                 fontSize: 30,
                 fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
+                color: context.colors.textPrimary,
                 height: 1.15,
               ),
             ),
@@ -359,7 +359,7 @@ class _BottomContent extends StatelessWidget {
                 fontFamily: '.SF Pro Text',
                 fontSize: 15,
                 height: 1.5,
-                color: AppColors.textPrimary.withOpacity(0.55),
+                color: context.colors.textPrimary.withOpacity(0.55),
               ),
             ),
           ),
@@ -446,7 +446,7 @@ class _ProgressDot extends StatelessWidget {
       decoration: BoxDecoration(
         color: active
             ? AppColors.primaryViolet
-            : AppColors.textPrimary.withOpacity(0.20),
+            : context.colors.textPrimary.withOpacity(0.20),
         borderRadius: BorderRadius.circular(4),
       ),
     );

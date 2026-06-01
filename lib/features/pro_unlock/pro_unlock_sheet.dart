@@ -15,7 +15,7 @@ class ProUnlockSheet extends ConsumerWidget {
     final notifier = ref.read(iapNotifierProvider.notifier);
 
     return Scaffold(
-      backgroundColor: AppColors.bgBase,
+      backgroundColor: context.colors.bgBase,
       body: SafeArea(
         child: Stack(
           children: [
@@ -30,11 +30,11 @@ class ProUnlockSheet extends ConsumerWidget {
                   height: 32,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.surface2,
-                    border: Border.all(color: AppColors.borderDefault),
+                    color: context.colors.surface2,
+                    border: Border.all(color: context.colors.borderDefault),
                   ),
-                  child: const Icon(Icons.close_rounded,
-                      color: AppColors.textSecondary, size: 16),
+                  child: Icon(Icons.close_rounded,
+                      color: context.colors.textSecondary, size: 16),
                 ),
               ),
             ),
@@ -53,14 +53,14 @@ class ProUnlockSheet extends ConsumerWidget {
                   const SizedBox(height: 24),
 
                   // Title
-                  const Text(
+                  Text(
                     'Unlock Receipt Scanner',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: '.SF Pro Display',
                       fontSize: 26,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
+                      color: context.colors.textPrimary,
                       height: 1.2,
                     ),
                   ).animate().fade(duration: 350.ms, delay: 80.ms),
@@ -68,13 +68,13 @@ class ProUnlockSheet extends ConsumerWidget {
                   const SizedBox(height: 10),
 
                   // Subtitle
-                  const Text(
+                  Text(
                     'Scan any receipt. Items assigned in seconds.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: '.SF Pro Text',
                       fontSize: 15,
-                      color: AppColors.textSecondary,
+                      color: context.colors.textSecondary,
                       height: 1.5,
                     ),
                   ).animate().fade(duration: 350.ms, delay: 120.ms),
@@ -137,21 +137,21 @@ class ProUnlockSheet extends ConsumerWidget {
                             notifier.restore();
                           },
                     child: RichText(
-                      text: const TextSpan(
+                      text: TextSpan(
                         style: TextStyle(
                           fontFamily: '.SF Pro Text',
                           fontSize: 14,
-                          color: AppColors.textTertiary,
+                          color: context.colors.textTertiary,
                         ),
                         children: [
                           TextSpan(text: 'Already purchased? '),
                           TextSpan(
                             text: 'Restore',
                             style: TextStyle(
-                              color: AppColors.textSecondary,
+                              color: context.colors.textSecondary,
                               fontWeight: FontWeight.w600,
                               decoration: TextDecoration.underline,
-                              decorationColor: AppColors.textSecondary,
+                              decorationColor: context.colors.textSecondary,
                             ),
                           ),
                         ],
@@ -270,11 +270,11 @@ class _FeatureRow extends StatelessWidget {
         const SizedBox(width: 16),
         Text(
           text,
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: '.SF Pro Text',
             fontSize: 16,
             fontWeight: FontWeight.w500,
-            color: AppColors.textPrimary,
+            color: context.colors.textPrimary,
           ),
         ),
       ],
@@ -294,12 +294,12 @@ class _PriceBlock extends StatelessWidget {
       children: [
         RichText(
           textAlign: TextAlign.center,
-          text: const TextSpan(
+          text: TextSpan(
             style: TextStyle(
               fontFamily: '.SF Pro Display',
               fontSize: 30,
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
+              color: context.colors.textPrimary,
             ),
             children: [
               TextSpan(text: '\$2.99'),
@@ -308,7 +308,7 @@ class _PriceBlock extends StatelessWidget {
                 style: TextStyle(
                   fontWeight: FontWeight.w500,
                   fontSize: 18,
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                 ),
               ),
               TextSpan(
@@ -316,19 +316,19 @@ class _PriceBlock extends StatelessWidget {
                 style: TextStyle(
                   fontWeight: FontWeight.w500,
                   fontSize: 16,
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                 ),
               ),
             ],
           ),
         ),
         const SizedBox(height: 6),
-        const Text(
+        Text(
           'vs. \$4.99/month elsewhere',
           style: TextStyle(
             fontFamily: '.SF Pro Text',
             fontSize: 13,
-            color: AppColors.textTertiary,
+            color: context.colors.textTertiary,
           ),
         ),
       ],
@@ -356,7 +356,7 @@ class _UnlockButton extends StatelessWidget {
                   colors: [Color(0xFFFF6B9D), Color(0xFFFF9F43)],
                 )
               : null,
-          color: onTap == null ? AppColors.surface2 : null,
+          color: onTap == null ? context.colors.surface2 : null,
           boxShadow: onTap != null
               ? [
                   BoxShadow(

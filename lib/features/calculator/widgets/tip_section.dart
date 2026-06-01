@@ -27,7 +27,7 @@ class TipSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ── Section label ─────────────────────────────────────
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(bottom: 8),
           child: Text(
             'TIP',
@@ -35,7 +35,7 @@ class TipSection extends StatelessWidget {
               fontFamily: '.SF Pro Text',
               fontSize: 10,
               fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
+              color: context.colors.textSecondary,
               letterSpacing: 1.2,
             ),
           ),
@@ -66,7 +66,7 @@ class TipSection extends StatelessWidget {
         const SizedBox(height: 12),
 
         // ── Calculate tip on ──────────────────────────────────
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(bottom: 8),
           child: Text(
             'CALCULATE TIP ON',
@@ -74,7 +74,7 @@ class TipSection extends StatelessWidget {
               fontFamily: '.SF Pro Text',
               fontSize: 10,
               fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
+              color: context.colors.textSecondary,
               letterSpacing: 1.2,
             ),
           ),
@@ -109,10 +109,10 @@ class _TipChip extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: BoxDecoration(
-          color: selected ? AppColors.primaryViolet : AppColors.surface2,
+          color: selected ? AppColors.primaryViolet : context.colors.surface2,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: selected ? AppColors.primaryViolet : AppColors.borderDefault,
+            color: selected ? AppColors.primaryViolet : context.colors.borderDefault,
           ),
           boxShadow: selected
               ? [
@@ -131,7 +131,7 @@ class _TipChip extends StatelessWidget {
               fontFamily: '.SF Pro Text',
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: selected ? Colors.white : AppColors.textSecondary,
+              color: selected ? Colors.white : context.colors.textSecondary,
             ),
           ),
         ),
@@ -153,17 +153,17 @@ class _MoreButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: AppColors.surface2,
+          color: context.colors.surface2,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.borderDefault),
+          border: Border.all(color: context.colors.borderDefault),
         ),
-        child: const Text(
+        child: Text(
           '···',
           style: TextStyle(
             fontFamily: '.SF Pro Text',
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: AppColors.textSecondary,
+            color: context.colors.textSecondary,
           ),
         ),
       ),
@@ -183,9 +183,9 @@ class _TipBaseToggle extends StatelessWidget {
     return Container(
       height: 40,
       decoration: BoxDecoration(
-        color: AppColors.surface2,
+        color: context.colors.surface2,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderDefault),
+        border: Border.all(color: context.colors.borderDefault),
       ),
       child: Row(
         children: [
@@ -232,7 +232,7 @@ class _Segment extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         margin: const EdgeInsets.all(3),
         decoration: BoxDecoration(
-          color: active ? AppColors.surface3 : Colors.transparent,
+          color: active ? context.colors.surface3 : Colors.transparent,
           borderRadius: BorderRadius.circular(9),
           boxShadow: active
               ? [
@@ -251,7 +251,7 @@ class _Segment extends StatelessWidget {
               fontFamily: '.SF Pro Text',
               fontSize: 14,
               fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-              color: active ? AppColors.textPrimary : AppColors.textSecondary,
+              color: active ? context.colors.textPrimary : context.colors.textSecondary,
             ),
           ),
         ),

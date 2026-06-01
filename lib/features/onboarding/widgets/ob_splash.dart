@@ -31,13 +31,13 @@ class ObSplash extends StatelessWidget {
           const SizedBox(height: 28),
 
           // ── SplitFair ────────────────────────────────────────
-          const Text(
+          Text(
             'SplitFair',
             style: TextStyle(
               fontFamily: '.SF Pro Display',
               fontSize: 40,
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
+              color: context.colors.textPrimary,
               letterSpacing: -0.5,
             ),
           ).animate().fade(begin: 0, duration: 400.ms, delay: 700.ms).slideY(
@@ -56,7 +56,7 @@ class ObSplash extends StatelessWidget {
               fontFamily: '.SF Pro Text',
               fontSize: 11,
               fontWeight: FontWeight.w500,
-              color: AppColors.textPrimary.withOpacity(0.45),
+              color: context.colors.textPrimary.withOpacity(0.45),
               letterSpacing: 3.0,
             ),
           ).animate().fade(begin: 0, duration: 350.ms, delay: 950.ms),
@@ -72,7 +72,7 @@ class ObSplash extends StatelessWidget {
                 fontFamily: '.SF Pro Text',
                 fontSize: 11,
                 fontWeight: FontWeight.w400,
-                color: AppColors.textPrimary.withOpacity(0.28),
+                color: context.colors.textPrimary.withOpacity(0.28),
               ),
             ),
           ).animate().fade(begin: 0, duration: 300.ms, delay: 1200.ms),

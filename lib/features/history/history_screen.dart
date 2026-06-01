@@ -73,7 +73,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     final sessions = ref.watch(historyNotifierProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.bgBase,
+      backgroundColor: context.colors.bgBase,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -134,22 +134,22 @@ class _HistoryAppBar extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             'Past Splits',
             style: TextStyle(
               fontFamily: '.SF Pro Display',
               fontSize: 34,
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
+              color: context.colors.textPrimary,
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             'Last 20 splits — stored on your iPhone',
             style: TextStyle(
               fontFamily: '.SF Pro Text',
               fontSize: 14,
-              color: AppColors.textSecondary,
+              color: context.colors.textSecondary,
             ),
           ),
           const SizedBox(height: 16),
@@ -247,9 +247,9 @@ class _SessionCard extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface1,
+          color: context.colors.surface1,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.borderDefault),
+          border: Border.all(color: context.colors.borderDefault),
         ),
         clipBehavior: Clip.hardEdge,
         child: Column(
@@ -267,11 +267,11 @@ class _SessionCard extends StatelessWidget {
                       children: [
                         Text(
                           title,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: '.SF Pro Display',
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
+                            color: context.colors.textPrimary,
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -285,19 +285,19 @@ class _SessionCard extends StatelessWidget {
                     children: [
                       Text(
                         totalStr,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: '.SF Pro Display',
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
+                          color: context.colors.textPrimary,
                         ),
                       ),
                       Text(
                         '${session.people.length} ${session.people.length == 1 ? 'person' : 'people'}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: '.SF Pro Text',
                           fontSize: 12,
-                          color: AppColors.textSecondary,
+                          color: context.colors.textSecondary,
                         ),
                       ),
                     ],
@@ -306,8 +306,8 @@ class _SessionCard extends StatelessWidget {
               ),
             ),
             if (isExpanded) ...[
-              const Divider(
-                  height: 1, thickness: 0.5, color: AppColors.borderDefault),
+              Divider(
+                  height: 1, thickness: 0.5, color: context.colors.borderDefault),
               ...result.perPerson.asMap().entries.map((e) => _PersonRow(
                     result: e.value,
                     currencySymbol: fmt.currencySymbol,
@@ -336,18 +336,18 @@ class _DateBadge extends StatelessWidget {
 
     Widget content;
     if (diff == 0) {
-      content = const Text(
+      content = Text(
         'TODAY',
         style: TextStyle(
           fontFamily: '.SF Pro Text',
           fontSize: 9,
           fontWeight: FontWeight.w700,
-          color: AppColors.textSecondary,
+          color: context.colors.textSecondary,
           letterSpacing: 0.4,
         ),
       );
     } else if (diff == 1) {
-      content = const FittedBox(
+      content = FittedBox(
         fit: BoxFit.scaleDown,
         child: Text(
           'YESTER\nDAY',
@@ -356,7 +356,7 @@ class _DateBadge extends StatelessWidget {
             fontFamily: '.SF Pro Text',
             fontSize: 8,
             fontWeight: FontWeight.w700,
-            color: AppColors.textSecondary,
+            color: context.colors.textSecondary,
             letterSpacing: 0.3,
             height: 1.3,
           ),
@@ -368,21 +368,21 @@ class _DateBadge extends StatelessWidget {
         children: [
           Text(
             DateFormat('MMM').format(date).toUpperCase(),
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: '.SF Pro Text',
               fontSize: 9,
               fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
+              color: context.colors.textSecondary,
               letterSpacing: 0.4,
             ),
           ),
           Text(
             '${date.day}',
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: '.SF Pro Display',
               fontSize: 20,
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
+              color: context.colors.textPrimary,
               height: 1.1,
             ),
           ),
@@ -394,7 +394,7 @@ class _DateBadge extends StatelessWidget {
       width: 54,
       height: 54,
       decoration: BoxDecoration(
-        color: AppColors.surface2,
+        color: context.colors.surface2,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Center(child: content),
@@ -446,14 +446,14 @@ class _AvatarStack extends StatelessWidget {
                 height: _size,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppColors.surface3,
-                  border: Border.all(color: AppColors.surface1, width: 1.5),
+                  color: context.colors.surface3,
+                  border: Border.all(color: context.colors.surface1, width: 1.5),
                 ),
                 child: Center(
                   child: Text(
                     '+$overflow',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
+                    style: TextStyle(
+                      color: context.colors.textSecondary,
                       fontSize: 9,
                       fontWeight: FontWeight.w700,
                       fontFamily: '.SF Pro Text',
@@ -485,7 +485,7 @@ class _Avatar extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        border: Border.all(color: AppColors.surface1, width: 1.5),
+        border: Border.all(color: context.colors.surface1, width: 1.5),
       ),
       child: Center(
         child: Text(
@@ -556,31 +556,31 @@ class _PersonRow extends StatelessWidget {
               Expanded(
                 child: Text(
                   result.person.name,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: '.SF Pro Text',
                     fontSize: 15,
-                    color: AppColors.textPrimary,
+                    color: context.colors.textPrimary,
                   ),
                 ),
               ),
               Text(
                 '$currencySymbol${result.total.toStringAsFixed(2)}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: '.SF Pro Display',
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: context.colors.textPrimary,
                 ),
               ),
             ],
           ),
         ),
         if (!isLast)
-          const Divider(
+          Divider(
             height: 1,
             thickness: 0.5,
             indent: 54,
-            color: AppColors.borderDefault,
+            color: context.colors.borderDefault,
           ),
       ],
     );
@@ -596,9 +596,9 @@ class _AdSlot extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface1,
+        color: context.colors.surface1,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderDefault),
+        border: Border.all(color: context.colors.borderDefault),
       ),
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -617,7 +617,7 @@ class _AdSlot extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -627,7 +627,7 @@ class _AdSlot extends StatelessWidget {
                       fontFamily: '.SF Pro Display',
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                      color: context.colors.textPrimary,
                     ),
                   ),
                   SizedBox(height: 2),
@@ -636,7 +636,7 @@ class _AdSlot extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: '.SF Pro Text',
                       fontSize: 13,
-                      color: AppColors.textSecondary,
+                      color: context.colors.textSecondary,
                     ),
                   ),
                 ],
@@ -646,16 +646,16 @@ class _AdSlot extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
               decoration: BoxDecoration(
-                color: AppColors.surface3,
+                color: context.colors.surface3,
                 borderRadius: BorderRadius.circular(5),
               ),
-              child: const Text(
+              child: Text(
                 'AD',
                 style: TextStyle(
                   fontFamily: '.SF Pro Text',
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textTertiary,
+                  color: context.colors.textTertiary,
                   letterSpacing: 0.5,
                 ),
               ),
@@ -684,32 +684,32 @@ class _EmptyState extends StatelessWidget {
               width: 72,
               height: 72,
               decoration: BoxDecoration(
-                color: AppColors.surface1,
+                color: context.colors.surface1,
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.borderDefault),
+                border: Border.all(color: context.colors.borderDefault),
               ),
               child: const Center(
                 child: Text('\uD83E\uDDFE', style: TextStyle(fontSize: 32)),
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
+            Text(
               'No splits yet',
               style: TextStyle(
                 fontFamily: '.SF Pro Display',
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: context.colors.textPrimary,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'Your completed bill splits will appear here.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: '.SF Pro Text',
                 fontSize: 15,
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
                 height: 1.4,
               ),
             ),

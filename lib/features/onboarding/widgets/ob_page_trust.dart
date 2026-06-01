@@ -56,9 +56,9 @@ class _NumpadCard extends StatelessWidget {
     return Container(
       width: 260,
       decoration: BoxDecoration(
-        color: AppColors.surface2,
+        color: context.colors.surface2,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.borderDefault),
+        border: Border.all(color: context.colors.borderDefault),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.40),
@@ -82,7 +82,7 @@ class _NumpadCard extends StatelessWidget {
                     fontFamily: '.SF Pro Text',
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary.withOpacity(0.45),
+                    color: context.colors.textPrimary.withOpacity(0.45),
                     letterSpacing: 1.6,
                   ),
                 ),
@@ -97,16 +97,16 @@ class _NumpadCard extends StatelessWidget {
                         fontFamily: '.SF Mono',
                         fontSize: 22,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary.withOpacity(0.6),
+                        color: context.colors.textPrimary.withOpacity(0.6),
                       ),
                     ),
-                    const Text(
+                    Text(
                       '163',
                       style: TextStyle(
                         fontFamily: '.SF Mono',
                         fontSize: 42,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                        color: context.colors.textPrimary,
                         height: 1,
                       ),
                     ),
@@ -116,7 +116,7 @@ class _NumpadCard extends StatelessWidget {
                         fontFamily: '.SF Mono',
                         fontSize: 28,
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textPrimary.withOpacity(0.55),
+                        color: context.colors.textPrimary.withOpacity(0.55),
                         height: 1,
                       ),
                     ),
@@ -186,12 +186,12 @@ class _NumKey extends StatelessWidget {
       decoration: BoxDecoration(
         color: isBackspace
             ? AppColors.primaryViolet.withOpacity(0.18)
-            : AppColors.surface3,
+            : context.colors.surface3,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: isBackspace
               ? AppColors.primaryViolet.withOpacity(0.3)
-              : AppColors.borderDefault,
+              : context.colors.borderDefault,
         ),
       ),
       child: Center(
@@ -202,7 +202,7 @@ class _NumKey extends StatelessWidget {
             fontSize: isBackspace ? 16 : 18,
             fontWeight: FontWeight.w500,
             color:
-                isBackspace ? AppColors.primaryViolet : AppColors.textPrimary,
+                isBackspace ? AppColors.primaryViolet : context.colors.textPrimary,
           ),
         ),
       ),

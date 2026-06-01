@@ -33,7 +33,7 @@ class _CurrencySelectorSheetState extends ConsumerState<CurrencySelectorSheet> {
     final recentCodes = ref.watch(recentCurrencyCodesProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.bgBase,
+      backgroundColor: context.colors.bgBase,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -44,18 +44,18 @@ class _CurrencySelectorSheetState extends ConsumerState<CurrencySelectorSheet> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                        color: AppColors.textSecondary, size: 20),
+                    icon: Icon(Icons.arrow_back_ios_new_rounded,
+                        color: context.colors.textSecondary, size: 20),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Select Currency',
                       style: TextStyle(
                         fontFamily: '.SF Pro Display',
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                        color: context.colors.textPrimary,
                       ),
                     ),
                   ),
@@ -69,33 +69,33 @@ class _CurrencySelectorSheetState extends ConsumerState<CurrencySelectorSheet> {
               child: Container(
                 height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.surface1,
+                  color: context.colors.surface1,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.borderDefault),
+                  border: Border.all(color: context.colors.borderDefault),
                 ),
                 child: Row(
                   children: [
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12),
                       child: Icon(Icons.search_rounded,
-                          color: AppColors.textTertiary, size: 18),
+                          color: context.colors.textTertiary, size: 18),
                     ),
                     Expanded(
                       child: TextField(
                         controller: _searchController,
                         onChanged: (v) =>
                             setState(() => _query = v.trim().toLowerCase()),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontFamily: '.SF Pro Text',
                           fontSize: 15,
-                          color: AppColors.textPrimary,
+                          color: context.colors.textPrimary,
                         ),
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           hintText: 'Search currency or country...',
                           hintStyle: TextStyle(
                             fontFamily: '.SF Pro Text',
                             fontSize: 15,
-                            color: AppColors.textTertiary,
+                            color: context.colors.textTertiary,
                           ),
                           border: InputBorder.none,
                           isDense: true,
@@ -115,9 +115,9 @@ class _CurrencySelectorSheetState extends ConsumerState<CurrencySelectorSheet> {
                   child: CircularProgressIndicator(
                       color: AppColors.primaryViolet, strokeWidth: 2),
                 ),
-                error: (_, __) => const Center(
+                error: (_, __) => Center(
                   child: Text('Failed to load currencies',
-                      style: TextStyle(color: AppColors.textSecondary)),
+                      style: TextStyle(color: context.colors.textSecondary)),
                 ),
                 data: (allCurrencies) {
                   final recentList = recentCodes
@@ -198,11 +198,11 @@ class _SectionHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 6),
       child: Text(
         label,
-        style: const TextStyle(
+        style: TextStyle(
           fontFamily: '.SF Pro Text',
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: AppColors.textSecondary,
+          color: context.colors.textSecondary,
           letterSpacing: 1.2,
         ),
       ),
@@ -253,19 +253,19 @@ class _CurrencyTile extends StatelessWidget {
                 children: [
                   Text(
                     currency.code,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: '.SF Pro Display',
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
+                      color: context.colors.textPrimary,
                     ),
                   ),
                   Text(
                     currency.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontFamily: '.SF Pro Text',
                       fontSize: 13,
-                      color: AppColors.textSecondary,
+                      color: context.colors.textSecondary,
                     ),
                   ),
                 ],

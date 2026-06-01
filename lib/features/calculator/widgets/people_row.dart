@@ -84,26 +84,26 @@ class _AddButton extends StatelessWidget {
               height: 58,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppColors.surface2,
+                color: context.colors.surface2,
                 border: Border.all(
-                  color: AppColors.borderDefault,
+                  color: context.colors.borderDefault,
                   width: 1.5,
                 ),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.add_rounded,
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
                 size: 26,
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
+            Text(
               'Add',
               style: TextStyle(
                 fontFamily: '.SF Pro Text',
                 fontSize: 12,
                 fontWeight: FontWeight.w400,
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
               ),
             ),
           ],
@@ -228,7 +228,7 @@ class _PersonAvatar extends StatelessWidget {
                 fontSize: 11,
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
                 color:
-                    isActive ? AppColors.textPrimary : AppColors.textSecondary,
+                    isActive ? context.colors.textPrimary : context.colors.textSecondary,
               ),
             ),
           ],

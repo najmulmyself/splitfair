@@ -27,10 +27,6 @@ void main() async {
   // ── SharedPreferences ────────────────────────────────────────
   final prefs = await SharedPreferences.getInstance();
 
-  // ── AdMob ────────────────────────────────────────────────────
-  await MobileAds.instance.initialize();
-  await InterstitialAdService.instance.preload();
-
   // ── Run ──────────────────────────────────────────────────────
   runApp(
     ProviderScope(
@@ -40,4 +36,9 @@ void main() async {
       child: const SplitFairApp(),
     ),
   );
+
+  // ── AdMob (initialised after app is visible) ─────────────────
+  MobileAds.instance.initialize().then((_) {
+    InterstitialAdService.instance.preload();
+  });
 }

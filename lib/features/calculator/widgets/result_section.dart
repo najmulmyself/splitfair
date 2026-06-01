@@ -32,7 +32,7 @@ class ResultSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ── Section label ─────────────────────────────────────
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(bottom: 10),
           child: Text(
             'RESULT',
@@ -40,7 +40,7 @@ class ResultSection extends StatelessWidget {
               fontFamily: '.SF Pro Text',
               fontSize: 10,
               fontWeight: FontWeight.w600,
-              color: AppColors.textSecondary,
+              color: context.colors.textSecondary,
               letterSpacing: 1.2,
             ),
           ),
@@ -101,24 +101,24 @@ class _SummaryRow extends StatelessWidget {
         _SummaryItem(
             label: 'Total',
             value: '$currencySymbol${total.toStringAsFixed(2)}'),
-        _divider(),
+        _divider(context),
         _SummaryItem(
           label: 'Tip',
           value: '+$currencySymbol${tip.toStringAsFixed(2)}',
           valueColor: AppColors.emeraldMint,
         ),
-        _divider(),
+        _divider(context),
         _SummaryItem(
             label: 'Avg', value: '$currencySymbol${avg.toStringAsFixed(2)}'),
       ],
     );
   }
 
-  Widget _divider() => Container(
+  Widget _divider(BuildContext context) => Container(
         width: 1,
         height: 20,
         margin: const EdgeInsets.symmetric(horizontal: 10),
-        color: AppColors.borderDefault,
+        color: context.colors.borderDefault,
       );
 }
 
@@ -139,11 +139,11 @@ class _SummaryItem extends StatelessWidget {
       children: [
         Text(
           '$label ',
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: '.SF Pro Text',
             fontSize: 13,
             fontWeight: FontWeight.w400,
-            color: AppColors.textSecondary,
+            color: context.colors.textSecondary,
           ),
         ),
         Text(
@@ -152,7 +152,7 @@ class _SummaryItem extends StatelessWidget {
             fontFamily: '.SF Pro Text',
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: valueColor ?? AppColors.textPrimary,
+            color: valueColor ?? context.colors.textPrimary,
           ),
         ),
       ],
@@ -181,14 +181,14 @@ class _PersonResultCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: cardBg ?? AppColors.surface1,
+        color: cardBg ?? context.colors.surface1,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isLowest
               ? AppColors.emeraldMint.withOpacity(0.25)
               : isHighest
                   ? AppColors.coralPink.withOpacity(0.25)
-                  : AppColors.borderDefault,
+                  : context.colors.borderDefault,
         ),
       ),
       child: Row(
@@ -231,11 +231,11 @@ class _PersonResultCard extends StatelessWidget {
                   children: [
                     Text(
                       result.person.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: '.SF Pro Text',
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                        color: context.colors.textPrimary,
                       ),
                     ),
                     if (isLowest) ...[
@@ -249,13 +249,13 @@ class _PersonResultCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 2),
-                const Text(
+                Text(
                   'OWES',
                   style: TextStyle(
                     fontFamily: '.SF Pro Text',
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textTertiary,
+                    color: context.colors.textTertiary,
                     letterSpacing: 0.8,
                   ),
                 ),
@@ -266,11 +266,11 @@ class _PersonResultCard extends StatelessWidget {
           // Amount
           Text(
             '$currencySymbol${result.total.toStringAsFixed(2)}',
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: 'AppFont',
               fontSize: 24,
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+              color: context.colors.textPrimary,
             ),
           ),
         ],

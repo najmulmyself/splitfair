@@ -19,7 +19,7 @@ class Numpad extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.bgBase,
+      color: context.colors.bgBase,
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -29,13 +29,13 @@ class Numpad extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 10),
             child: Row(
               children: [
-                const Text(
+                Text(
                   'NUMBER PAD',
                   style: TextStyle(
                     fontFamily: '.SF Pro Text',
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+                    color: context.colors.textSecondary,
                     letterSpacing: 1.2,
                   ),
                 ),
@@ -111,24 +111,24 @@ class _NumpadKeyState extends State<_NumpadKey> {
         duration: const Duration(milliseconds: 80),
         height: 52,
         decoration: BoxDecoration(
-          color: _pressed ? AppColors.surface3 : AppColors.surface1,
+          color: _pressed ? context.colors.surface3 : context.colors.surface1,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.borderDefault),
+          border: Border.all(color: context.colors.borderDefault),
         ),
         child: Center(
           child: isBackspace
-              ? const Icon(
+              ? Icon(
                   Icons.backspace_outlined,
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                   size: 20,
                 )
               : Text(
                   widget.label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: '.SF Pro Text',
                     fontSize: 22,
                     fontWeight: FontWeight.w500,
-                    color: AppColors.textPrimary,
+                    color: context.colors.textPrimary,
                   ),
                 ),
         ),

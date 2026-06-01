@@ -203,7 +203,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     final results = hasResults ? notifier.results : <dynamic>[];
 
     return Scaffold(
-      backgroundColor: AppColors.bgBase,
+      backgroundColor: context.colors.bgBase,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -380,13 +380,13 @@ class _CalcAppBar extends StatelessWidget {
           // Logo mark
           _LogoMark(),
           const SizedBox(width: 10),
-          const Text(
+          Text(
             'SplitFair',
             style: TextStyle(
               fontFamily: '.SF Pro Display',
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+              color: context.colors.textPrimary,
             ),
           ),
           const Spacer(),
@@ -419,10 +419,10 @@ class _AppBarBtn extends StatelessWidget {
         height: 38,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: AppColors.surface1,
-          border: Border.all(color: AppColors.borderDefault),
+          color: context.colors.surface1,
+          border: Border.all(color: context.colors.borderDefault),
         ),
-        child: Icon(icon, color: AppColors.textSecondary, size: 18),
+        child: Icon(icon, color: context.colors.textSecondary, size: 18),
       ),
     );
   }
@@ -510,7 +510,7 @@ class _HintCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       decoration: BoxDecoration(
-        color: AppColors.surface1.withOpacity(0.5),
+        color: context.colors.surface1.withOpacity(0.5),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: AppColors.primaryViolet.withOpacity(0.2),
@@ -522,14 +522,14 @@ class _HintCard extends StatelessWidget {
           Icon(Icons.add_circle_outline_rounded,
               color: AppColors.primaryViolet.withOpacity(0.6), size: 18),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Text(
               "Tap a number, then add who's at the table.\nWe'll handle the math.",
               style: TextStyle(
                 fontFamily: '.SF Pro Text',
                 fontSize: 14,
                 height: 1.5,
-                color: AppColors.textSecondary,
+                color: context.colors.textSecondary,
               ),
             ),
           ),
@@ -619,18 +619,18 @@ class _DisabledButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface1,
+        color: context.colors.surface1,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderDefault),
+        border: Border.all(color: context.colors.borderDefault),
       ),
       child: Center(
         child: Text(
           hasBill ? 'Add people to continue' : 'Enter a bill to continue',
-          style: const TextStyle(
+          style: TextStyle(
             fontFamily: '.SF Pro Text',
             fontSize: 15,
             fontWeight: FontWeight.w400,
-            color: AppColors.textTertiary,
+            color: context.colors.textTertiary,
           ),
         ),
       ),
@@ -655,8 +655,8 @@ class _AddPersonSheetState extends State<_AddPersonSheet> {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     return Container(
       padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + bottom),
-      decoration: const BoxDecoration(
-        color: AppColors.surface1,
+      decoration: BoxDecoration(
+        color: context.colors.surface1,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
@@ -669,19 +669,19 @@ class _AddPersonSheetState extends State<_AddPersonSheet> {
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.borderDefault,
+                color: context.colors.borderDefault,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
           const SizedBox(height: 20),
-          const Text(
+          Text(
             "Who's at the table?",
             style: TextStyle(
               fontFamily: '.SF Pro Display',
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+              color: context.colors.textPrimary,
             ),
           ),
           const SizedBox(height: 14),
@@ -690,16 +690,16 @@ class _AddPersonSheetState extends State<_AddPersonSheet> {
             autofocus: true,
             textCapitalization: TextCapitalization.words,
             maxLength: 20,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: '.SF Pro Text',
               fontSize: 16,
-              color: AppColors.textPrimary,
+              color: context.colors.textPrimary,
             ),
             decoration: InputDecoration(
               hintText: 'Enter a name',
-              hintStyle: const TextStyle(color: AppColors.textTertiary),
+              hintStyle: TextStyle(color: context.colors.textTertiary),
               filled: true,
-              fillColor: AppColors.surface2,
+              fillColor: context.colors.surface2,
               counterText: '',
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
@@ -779,9 +779,9 @@ class _RemovePersonSheet extends StatelessWidget {
           // ── Main action card ─────────────────────────────────
           Container(
             decoration: BoxDecoration(
-              color: AppColors.surface1,
+              color: context.colors.surface1,
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: AppColors.borderDefault),
+              border: Border.all(color: context.colors.borderDefault),
             ),
             clipBehavior: Clip.hardEdge,
             child: Column(
@@ -819,11 +819,11 @@ class _RemovePersonSheet extends StatelessWidget {
                       Expanded(
                         child: Text(
                           personName,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: '.SF Pro Display',
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
+                            color: context.colors.textPrimary,
                           ),
                         ),
                       ),
@@ -832,7 +832,7 @@ class _RemovePersonSheet extends StatelessWidget {
                 ),
 
                 // Divider
-                Container(height: 1, color: AppColors.borderDefault),
+                Container(height: 1, color: context.colors.borderDefault),
 
                 // Remove button
                 GestureDetector(
@@ -877,18 +877,18 @@ class _RemovePersonSheet extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 18),
               decoration: BoxDecoration(
-                color: AppColors.surface1,
+                color: context.colors.surface1,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: AppColors.borderDefault),
+                border: Border.all(color: context.colors.borderDefault),
               ),
-              child: const Center(
+              child: Center(
                 child: Text(
                   'Cancel',
                   style: TextStyle(
                     fontFamily: '.SF Pro Text',
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: context.colors.textPrimary,
                   ),
                 ),
               ),
@@ -945,8 +945,8 @@ class _CustomTipSheetState extends State<_CustomTipSheet> {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     return Container(
       padding: EdgeInsets.fromLTRB(20, 20, 20, 20 + bottom),
-      decoration: const BoxDecoration(
-        color: AppColors.surface1,
+      decoration: BoxDecoration(
+        color: context.colors.surface1,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
@@ -959,28 +959,28 @@ class _CustomTipSheetState extends State<_CustomTipSheet> {
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.borderDefault,
+                color: context.colors.borderDefault,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
           const SizedBox(height: 20),
-          const Text(
+           Text(
             'Custom Tip',
             style: TextStyle(
               fontFamily: '.SF Pro Display',
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: AppColors.textPrimary,
+              color: context.colors.textPrimary,
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
+           Text(
             'Enter any percentage between 0 and 100.',
             style: TextStyle(
               fontFamily: '.SF Pro Text',
               fontSize: 14,
-              color: AppColors.textSecondary,
+              color: context.colors.textSecondary,
             ),
           ),
           const SizedBox(height: 16),
@@ -991,17 +991,17 @@ class _CustomTipSheetState extends State<_CustomTipSheet> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
               decoration: BoxDecoration(
-                color: AppColors.surface2,
+                color: context.colors.surface2,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.borderDefault),
+                border: Border.all(color: context.colors.borderDefault),
               ),
-              child: const Text(
+              child: Text(
                 'No Tip (0%)',
                 style: TextStyle(
                   fontFamily: '.SF Pro Text',
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                 ),
               ),
             ),
@@ -1014,10 +1014,10 @@ class _CustomTipSheetState extends State<_CustomTipSheet> {
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'[\d.]'))
             ],
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: '.SF Pro Text',
               fontSize: 16,
-              color: AppColors.textPrimary,
+              color: context.colors.textPrimary,
             ),
             decoration: InputDecoration(
               hintText: 'e.g. 12',
@@ -1028,9 +1028,9 @@ class _CustomTipSheetState extends State<_CustomTipSheet> {
                 fontWeight: FontWeight.w600,
                 color: AppColors.primaryViolet,
               ),
-              hintStyle: const TextStyle(color: AppColors.textTertiary),
+              hintStyle: TextStyle(color: context.colors.textTertiary),
               filled: true,
-              fillColor: AppColors.surface2,
+              fillColor: context.colors.surface2,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide.none,

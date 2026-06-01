@@ -60,8 +60,46 @@ abstract class AppColors {
   // ── AdMob / Ad slots ────────────────────────────────────────
   static const adBackground = Color(0xFF1E1C3A);
 
+  // ── Light mode extras ────────────────────────────────────────
+  static const surface3Light = Color(0xFFDDD9FF);
+  static const textTertiaryLight = Color(0x590B0A1A); // 35% dark
+  static const borderDefaultLight = Color(0x1A0B0A1A); // 10% dark
+  static const borderActiveLight = Color(0x2E0B0A1A); // 18% dark
+
   // ── Mesh gradient overlay opacities (for background) ────────
   static const meshViolet = Color(0x33782CFF); // 20%
   static const meshCoral = Color(0x26FF6B9D); // 15%
   static const meshMint = Color(0x1A00D4AA); // 10%
+}
+
+/// Resolved theme-aware colors. Access via [BuildContext.colors].
+///
+/// Use this instead of referencing [AppColors] dark-mode constants directly
+/// in widgets, so that light mode is respected.
+class AppColorsResolved {
+  const AppColorsResolved({required this.isDark});
+  final bool isDark;
+
+  Color get bgBase => isDark ? AppColors.bgBase : AppColors.bgBaseLight;
+  Color get surface1 => isDark ? AppColors.surface1 : AppColors.surface1Light;
+  Color get surface2 => isDark ? AppColors.surface2 : AppColors.surface2Light;
+  Color get surface3 => isDark ? AppColors.surface3 : AppColors.surface3Light;
+  Color get textPrimary =>
+      isDark ? AppColors.textPrimary : AppColors.textPrimaryLight;
+  Color get textSecondary =>
+      isDark ? AppColors.textSecondary : AppColors.textSecondaryLight;
+  Color get textTertiary =>
+      isDark ? AppColors.textTertiary : AppColors.textTertiaryLight;
+  Color get borderDefault =>
+      isDark ? AppColors.borderDefault : AppColors.borderDefaultLight;
+  Color get borderActive =>
+      isDark ? AppColors.borderActive : AppColors.borderActiveLight;
+}
+
+extension AppColorsContext on BuildContext {
+  /// Returns theme-aware resolved colors for the current brightness.
+  AppColorsResolved get colors {
+    final isDark = Theme.of(this).brightness == Brightness.dark;
+    return AppColorsResolved(isDark: isDark);
+  }
 }

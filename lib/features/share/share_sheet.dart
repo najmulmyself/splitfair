@@ -76,7 +76,7 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
       SnackBar(
         content: const Text('Copied to clipboard',
             style: TextStyle(color: Colors.white)),
-        backgroundColor: AppColors.surface2,
+        backgroundColor: context.colors.surface2,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         duration: const Duration(seconds: 2),
@@ -134,7 +134,7 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
         results, grandTotal, currencyCode, sessionTitle, tipPct);
 
     return Scaffold(
-      backgroundColor: AppColors.bgBase,
+      backgroundColor: context.colors.bgBase,
       body: SafeArea(
         child: Column(
           children: [
@@ -144,18 +144,18 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                        color: AppColors.textSecondary, size: 20),
+                    icon: Icon(Icons.arrow_back_ios_new_rounded,
+                        color: context.colors.textSecondary, size: 20),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Share Results',
                       style: TextStyle(
                         fontFamily: '.SF Pro Display',
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                        color: context.colors.textPrimary,
                       ),
                     ),
                   ),
@@ -222,9 +222,9 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
                         ),
                         _SendButton(
                           label: 'Copy',
-                          color: AppColors.surface2,
-                          child: const Icon(Icons.copy_rounded,
-                              color: AppColors.textSecondary, size: 22),
+                          color: context.colors.surface2,
+                          child: Icon(Icons.copy_rounded,
+                              color: context.colors.textSecondary, size: 22),
                           onTap: () {
                             Haptics.selection();
                             _copyToClipboard(textSummary);
@@ -517,11 +517,11 @@ class _SectionLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       label,
-      style: const TextStyle(
+      style: TextStyle(
         fontFamily: '.SF Pro Text',
         fontSize: 11,
         fontWeight: FontWeight.w600,
-        color: AppColors.textSecondary,
+        color: context.colors.textSecondary,
         letterSpacing: 1.2,
       ),
     );
@@ -565,11 +565,11 @@ class _SendButton extends StatelessWidget {
           const SizedBox(height: 7),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontFamily: '.SF Pro Text',
               fontSize: 11,
               fontWeight: FontWeight.w400,
-              color: AppColors.textSecondary,
+              color: context.colors.textSecondary,
             ),
           ),
         ],
@@ -611,7 +611,7 @@ class _AvatarStack extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                border: Border.all(color: AppColors.bgBase, width: 1.5),
+                border: Border.all(color: context.colors.bgBase, width: 1.5),
               ),
               child: Center(
                 child: Text(initial,
@@ -668,18 +668,18 @@ class _PayButton extends StatelessWidget {
         child: Container(
           height: 42,
           decoration: BoxDecoration(
-            color: AppColors.surface1,
+            color: context.colors.surface1,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.borderDefault),
+            border: Border.all(color: context.colors.borderDefault),
           ),
           child: Center(
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: '.SF Pro Text',
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
-                color: AppColors.textPrimary,
+                color: context.colors.textPrimary,
               ),
             ),
           ),

@@ -41,12 +41,12 @@ class BillCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.fromLTRB(18, 14, 14, 14),
         decoration: BoxDecoration(
-          color: AppColors.surface1,
+          color: context.colors.surface1,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isEditingBill
                 ? AppColors.primaryViolet.withOpacity(0.6)
-                : AppColors.borderDefault,
+                : context.colors.borderDefault,
             width: isEditingBill ? 1.5 : 1,
           ),
           boxShadow: [
@@ -65,13 +65,13 @@ class BillCard extends StatelessWidget {
             // ── Header row ───────────────────────────────────
             Row(
               children: [
-                const Text(
+                Text(
                   'BILL TOTAL',
                   style: TextStyle(
                     fontFamily: '.SF Pro Text',
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textSecondary,
+                    color: context.colors.textSecondary,
                     letterSpacing: 1.2,
                   ),
                 ),
@@ -99,13 +99,13 @@ class BillCard extends StatelessWidget {
               children: [
                 GestureDetector(
                   onTap: onTaxTap,
-                  child: const Text(
+                  child: Text(
                     '+ TAX',
                     style: TextStyle(
                       fontFamily: '.SF Pro Text',
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
-                      color: AppColors.textSecondary,
+                      color: context.colors.textSecondary,
                     ),
                   ),
                 ),
@@ -124,8 +124,8 @@ class BillCard extends StatelessWidget {
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                       color: taxBuffer.isNotEmpty && taxBuffer != '0'
-                          ? AppColors.textPrimary
-                          : AppColors.textTertiary,
+                          ? context.colors.textPrimary
+                          : context.colors.textTertiary,
                     ),
                   ),
                 ),
@@ -189,32 +189,32 @@ class _BillAmountDisplayState extends State<_BillAmountDisplay>
     final (intPart, decPart, hasTypedDec) = _parse(widget.buffer);
     final isEmpty = widget.buffer.isEmpty;
 
-    const bigStyle = TextStyle(
+    final bigStyle = TextStyle(
       fontFamily: 'AppFont',
       fontSize: 62,
       fontWeight: FontWeight.w800,
       height: 1.0,
-      color: AppColors.textPrimary,
+      color: context.colors.textPrimary,
     );
-    const symbolStyle = TextStyle(
+    final symbolStyle = TextStyle(
       fontFamily: 'AppFont',
       fontSize: 28,
       fontWeight: FontWeight.w700,
       height: 1.0,
-      color: AppColors.textPrimary,
+      color: context.colors.textPrimary,
     );
-    const decStyle = TextStyle(
+    final decStyle = TextStyle(
       fontFamily: 'AppFont',
       fontSize: 36,
       fontWeight: FontWeight.w700,
       height: 1.0,
-      color: AppColors.textPrimary,
+      color: context.colors.textPrimary,
     );
     final dimDecStyle = decStyle.copyWith(
-      color: AppColors.textPrimary.withOpacity(0.25),
+      color: context.colors.textPrimary.withOpacity(0.25),
     );
     final emptyStyle = bigStyle.copyWith(
-      color: AppColors.textPrimary.withOpacity(0.18),
+      color: context.colors.textPrimary.withOpacity(0.18),
     );
 
     return Row(
@@ -226,7 +226,7 @@ class _BillAmountDisplayState extends State<_BillAmountDisplay>
           child: Text(widget.currencySymbol,
               style: isEmpty
                   ? symbolStyle.copyWith(
-                      color: AppColors.textPrimary.withOpacity(0.18))
+                      color: context.colors.textPrimary.withOpacity(0.18))
                   : symbolStyle),
         ),
         const SizedBox(width: 2),
@@ -247,7 +247,7 @@ class _BillAmountDisplayState extends State<_BillAmountDisplay>
               : Text('.00',
                   style: isEmpty
                       ? dimDecStyle.copyWith(
-                          color: AppColors.textPrimary.withOpacity(0.18))
+                          color: context.colors.textPrimary.withOpacity(0.18))
                       : dimDecStyle),
         ),
 
@@ -289,7 +289,7 @@ class _TaxModeToggle extends StatelessWidget {
     return Container(
       height: 26,
       decoration: BoxDecoration(
-        color: AppColors.surface2,
+        color: context.colors.surface2,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -334,7 +334,7 @@ class _Pill extends StatelessWidget {
             fontFamily: '.SF Pro Text',
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: active ? Colors.white : AppColors.textSecondary,
+            color: active ? Colors.white : context.colors.textSecondary,
           ),
         ),
       ),
@@ -361,9 +361,9 @@ class _CurrencyBadge extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: AppColors.surface2,
+          color: context.colors.surface2,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppColors.borderDefault),
+          border: Border.all(color: context.colors.borderDefault),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -372,11 +372,11 @@ class _CurrencyBadge extends StatelessWidget {
             const SizedBox(width: 5),
             Text(
               code,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: '.SF Pro Text',
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: context.colors.textPrimary,
               ),
             ),
           ],

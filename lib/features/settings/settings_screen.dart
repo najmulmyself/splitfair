@@ -34,7 +34,7 @@ class SettingsScreen extends ConsumerWidget {
     );
 
     return Scaffold(
-      backgroundColor: AppColors.bgBase,
+      backgroundColor: context.colors.bgBase,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -221,13 +221,13 @@ class _SettingsAppBar extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
+          Text(
             'Settings',
             style: TextStyle(
               fontFamily: '.SF Pro Display',
               fontSize: 34,
               fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
+              color: context.colors.textPrimary,
             ),
           ),
           const SizedBox(height: 16),
@@ -247,11 +247,11 @@ class _SectionLabel extends StatelessWidget {
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
           fontFamily: '.SF Pro Text',
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: AppColors.textSecondary,
+          color: context.colors.textSecondary,
           letterSpacing: 0.9,
         ),
       ),
@@ -267,9 +267,9 @@ class _SettingsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface1,
+        color: context.colors.surface1,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderDefault),
+        border: Border.all(color: context.colors.borderDefault),
       ),
       clipBehavior: Clip.hardEdge,
       child: Column(children: children),
@@ -282,11 +282,11 @@ class _CardDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Divider(
+    return Divider(
       height: 1,
       thickness: 0.5,
       indent: 16,
-      color: AppColors.borderDefault,
+      color: context.colors.borderDefault,
     );
   }
 }
@@ -314,27 +314,27 @@ class _NavRow extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: '.SF Pro Text',
                   fontSize: 16,
-                  color: AppColors.textPrimary,
+                  color: context.colors.textPrimary,
                 ),
               ),
             ),
             if (trailing != null) ...[
               Text(
                 trailing!,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: '.SF Pro Text',
                   fontSize: 16,
-                  color: AppColors.textSecondary,
+                  color: context.colors.textSecondary,
                 ),
               ),
               const SizedBox(width: 4),
             ],
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
-              color: AppColors.textTertiary,
+              color: context.colors.textTertiary,
               size: 20,
             ),
           ],
@@ -364,10 +364,10 @@ class _ToggleRow extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontFamily: '.SF Pro Text',
                 fontSize: 16,
-                color: AppColors.textPrimary,
+                color: context.colors.textPrimary,
               ),
             ),
           ),
@@ -428,13 +428,13 @@ class _TipOnRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          const Expanded(
+          Expanded(
             child: Text(
               'Tip on',
               style: TextStyle(
                 fontFamily: '.SF Pro Text',
                 fontSize: 16,
-                color: AppColors.textPrimary,
+                color: context.colors.textPrimary,
               ),
             ),
           ),
@@ -467,13 +467,13 @@ class _ThemeRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          const Expanded(
+          Expanded(
             child: Text(
               'Theme',
               style: TextStyle(
                 fontFamily: '.SF Pro Text',
                 fontSize: 16,
-                color: AppColors.textPrimary,
+                color: context.colors.textPrimary,
               ),
             ),
           ),
@@ -508,9 +508,9 @@ class _SegmentedControl extends StatelessWidget {
       height: 36,
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: AppColors.surface3,
+        color: context.colors.surface3,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.borderDefault),
+        border: Border.all(color: context.colors.borderDefault),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -534,7 +534,9 @@ class _SegmentedControl extends StatelessWidget {
                     fontFamily: '.SF Pro Text',
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: isSelected ? Colors.white : AppColors.textSecondary,
+                    color: isSelected
+                        ? Colors.white
+                        : context.colors.textSecondary,
                   ),
                 ),
               ),
@@ -559,10 +561,10 @@ class _CoffeeBanner extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-        decoration: const BoxDecoration(
-          color: AppColors.surface1,
+        decoration: BoxDecoration(
+          color: context.colors.surface1,
           border: Border(
-            top: BorderSide(color: AppColors.borderDefault),
+            top: BorderSide(color: context.colors.borderDefault),
           ),
         ),
         child: Row(
@@ -583,7 +585,7 @@ class _CoffeeBanner extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 12),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -593,7 +595,7 @@ class _CoffeeBanner extends StatelessWidget {
                       fontFamily: '.SF Pro Display',
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.textPrimary,
+                      color: context.colors.textPrimary,
                     ),
                   ),
                   SizedBox(height: 2),
@@ -602,7 +604,7 @@ class _CoffeeBanner extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: '.SF Pro Text',
                       fontSize: 13,
-                      color: AppColors.textSecondary,
+                      color: context.colors.textSecondary,
                     ),
                   ),
                 ],
@@ -661,8 +663,8 @@ class _TipPickerSheet extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface1,
+        decoration: BoxDecoration(
+          color: context.colors.surface1,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -675,13 +677,13 @@ class _TipPickerSheet extends StatelessWidget {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.borderDefault,
+                  color: context.colors.borderDefault,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
             const SizedBox(height: 16),
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: Text(
                 'Default Tip',
@@ -689,7 +691,7 @@ class _TipPickerSheet extends StatelessWidget {
                   fontFamily: '.SF Pro Display',
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: context.colors.textPrimary,
                 ),
               ),
             ),
@@ -749,7 +751,7 @@ class _TipOption extends StatelessWidget {
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
                 color: isSelected
                     ? AppColors.primaryViolet
-                    : AppColors.textPrimary,
+                    : context.colors.textPrimary,
               ),
             ),
             const Spacer(),
