@@ -6,8 +6,8 @@ abstract class AdConfig {
   static const testInterstitialId = 'ca-app-pub-3940256099942544/4411468910';
 
   // ── Production IDs (replace before App Store submission) ────
-  static const productionBannerId = 'YOUR_PRODUCTION_BANNER_ID';
-  static const productionInterstitialId = 'YOUR_PRODUCTION_INTERSTITIAL_ID';
+  static const productionBannerId = 'ca-app-pub-3549493907002564/7116339196';
+  static const productionInterstitialId = 'ca-app-pub-3549493907002564/6830084496';
 
   // ── Active IDs (toggle with build flag) ─────────────────────
   static bool get _isProduction =>
