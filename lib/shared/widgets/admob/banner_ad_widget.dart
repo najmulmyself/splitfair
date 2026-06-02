@@ -22,16 +22,22 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
   BannerAd? _ad;
   bool _isLoaded = false;
 
+  bool _loadStarted = false;
+
   @override
-  void initState() {
-    super.initState();
-    if (widget.isVisible) _loadAd();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (widget.isVisible && !_loadStarted) {
+      _loadStarted = true;
+      _loadAd();
+    }
   }
 
   @override
   void didUpdateWidget(BannerAdWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.isVisible && !oldWidget.isVisible && _ad == null) {
+      _loadStarted = true;
       _loadAd();
     }
   }
