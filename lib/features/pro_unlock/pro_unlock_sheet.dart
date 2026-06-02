@@ -20,26 +20,6 @@ class ProUnlockSheet extends ConsumerWidget {
       body: SafeArea(
         child: Stack(
           children: [
-            // ── Close button ──────────────────────────────────
-            Positioned(
-              top: 8,
-              right: 12,
-              child: GestureDetector(
-                onTap: () => context.pop(),
-                child: Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: context.colors.surface2,
-                    border: Border.all(color: context.colors.borderDefault),
-                  ),
-                  child: Icon(Icons.close_rounded,
-                      color: context.colors.textSecondary, size: 16),
-                ),
-              ),
-            ),
-
             // ── Main content ──────────────────────────────────
             SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(24, 60, 24, 32),
@@ -174,6 +154,26 @@ class ProUnlockSheet extends ConsumerWidget {
                     ),
                   ],
                 ],
+              ),
+            ),
+
+            // ── Close button (last = on top) ──────────────────
+            Positioned(
+              top: 8,
+              right: 12,
+              child: GestureDetector(
+                onTap: () => context.pop(),
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: context.colors.surface2,
+                    border: Border.all(color: context.colors.borderDefault),
+                  ),
+                  child: Icon(Icons.close_rounded,
+                      color: context.colors.textSecondary, size: 16),
+                ),
               ),
             ),
           ],
