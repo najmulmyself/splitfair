@@ -122,7 +122,7 @@ class SettingsScreen extends ConsumerWidget {
                     const _CardDivider(),
                     _NavRow(
                       label: 'Privacy Policy',
-                      onTap: () => _openUrl('https://splitfair.app/privacy'),
+                      onTap: () => _openUrl('https://najmulmyself.github.io/splitfair/privacy'),
                     ),
                   ]),
                   const SizedBox(height: 24),
