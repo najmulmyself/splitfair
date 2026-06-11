@@ -97,7 +97,7 @@ class _LogoMark extends StatelessWidget {
           Positioned(
             left: 0,
             child: _LogoCircle(
-              label: 'S',
+              label: 'D',
               gradient: const LinearGradient(
                 colors: [Color(0xFF9B7FFF), Color(0xFF6A3FE0)],
                 begin: Alignment.topLeft,
@@ -110,7 +110,7 @@ class _LogoMark extends StatelessWidget {
           Positioned(
             right: 0,
             child: _LogoCircle(
-              label: 'F',
+              label: 'B',
               gradient: const LinearGradient(
                 colors: [Color(0xFFFF6B9D), Color(0xFFFF9F43)],
                 begin: Alignment.topLeft,
@@ -185,7 +185,7 @@ class ObLogoMark extends StatelessWidget {
           Positioned(
             left: 0,
             child: _LogoCircle(
-              label: 'S',
+              label: 'D',
               gradient: const LinearGradient(
                 colors: [Color(0xFF9B7FFF), Color(0xFF6A3FE0)],
                 begin: Alignment.topLeft,
@@ -197,7 +197,7 @@ class ObLogoMark extends StatelessWidget {
           Positioned(
             right: 0,
             child: _LogoCircle(
-              label: 'F',
+              label: 'B',
               gradient: const LinearGradient(
                 colors: [Color(0xFFFF6B9D), Color(0xFFFF9F43)],
                 begin: Alignment.topLeft,
