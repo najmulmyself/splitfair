@@ -112,7 +112,7 @@ class SettingsScreen extends ConsumerWidget {
                     _NavRow(
                       label: 'Rate DivvyBill',
                       onTap: () =>
-                          _openUrl('https://apps.apple.com/app/id000000000'),
+                          _openUrl('https://apps.apple.com/app/id6775596264'),
                     ),
                     const _CardDivider(),
                     _NavRow(
@@ -158,7 +158,7 @@ class SettingsScreen extends ConsumerWidget {
     await SharePlus.instance.share(
       ShareParams(
         text:
-            'Split bills effortlessly with DivvyBill!\nhttps://apps.apple.com/app/id000000000',
+            'Split bills effortlessly with DivvyBill!\nhttps://apps.apple.com/app/id6775596264',
       ),
     );
   }
