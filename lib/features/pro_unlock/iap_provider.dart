@@ -7,10 +7,10 @@ import '../settings/settings_provider.dart';
 part 'iap_provider.g.dart';
 
 /// Product ID — must match App Store Connect exactly.
-const kProProductId = 'com.splitfair.pro';
+const kProProductId = 'com.splitfair.billsplit.pro';
 
 /// Tip jar product ID.
-const kCoffeeProductId = 'com.splitfair.coffee';
+const kCoffeeProductId = 'com.splitfair.billsplit.coffee';
 
 /// Manages in-app purchase state for Pro and tip jar.
 @riverpod
