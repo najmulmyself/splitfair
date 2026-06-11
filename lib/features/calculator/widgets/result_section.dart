@@ -651,14 +651,28 @@ class _FlexOverrideControl extends StatefulWidget {
 class _FlexOverrideControlState extends State<_FlexOverrideControl> {
   final _ctrl = TextEditingController();
   FlexOverrideType _type = FlexOverrideType.amount;
+  bool _isEqualMode = true;
 
   @override
   void initState() {
     super.initState();
     if (widget.flexOverride != null) {
       _type = widget.flexOverride!.type;
+      _isEqualMode = false;
       _ctrl.text = widget.flexOverride!.value.toStringAsFixed(
           widget.flexOverride!.type == FlexOverrideType.amount ? 2 : 0);
+    }
+  }
+
+  @override
+  void didUpdateWidget(_FlexOverrideControl oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.flexOverride == null && oldWidget.flexOverride != null) {
+      // Override was cleared externally — reset to Equal mode.
+      setState(() {
+        _isEqualMode = true;
+        _ctrl.clear();
+      });
     }
   }
 
@@ -681,16 +695,18 @@ class _FlexOverrideControlState extends State<_FlexOverrideControl> {
 
   @override
   Widget build(BuildContext context) {
-    final hasOverride = widget.flexOverride != null;
     return Row(
       children: [
         // Equal chip (clears override)
         _OverrideChip(
           label: 'Equal',
-          selected: !hasOverride,
+          selected: _isEqualMode,
           color: AppColors.primaryViolet,
           onTap: () {
-            setState(() => _ctrl.clear());
+            setState(() {
+              _isEqualMode = true;
+              _ctrl.clear();
+            });
             widget.onChanged(null);
           },
         ),
@@ -698,17 +714,23 @@ class _FlexOverrideControlState extends State<_FlexOverrideControl> {
         // $ chip
         _OverrideChip(
           label: widget.currencySymbol,
-          selected: hasOverride && _type == FlexOverrideType.amount,
+          selected: !_isEqualMode && _type == FlexOverrideType.amount,
           color: AppColors.warmAmber,
-          onTap: () => setState(() => _type = FlexOverrideType.amount),
+          onTap: () => setState(() {
+            _isEqualMode = false;
+            _type = FlexOverrideType.amount;
+          }),
         ),
         const SizedBox(width: 6),
         // % chip
         _OverrideChip(
           label: '%',
-          selected: hasOverride && _type == FlexOverrideType.percentage,
+          selected: !_isEqualMode && _type == FlexOverrideType.percentage,
           color: AppColors.warmAmber,
-          onTap: () => setState(() => _type = FlexOverrideType.percentage),
+          onTap: () => setState(() {
+            _isEqualMode = false;
+            _type = FlexOverrideType.percentage;
+          }),
         ),
         const SizedBox(width: 8),
         // Amount input

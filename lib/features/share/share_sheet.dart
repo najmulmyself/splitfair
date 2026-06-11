@@ -62,20 +62,32 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
     Decimal grandTotal,
     String currencyCode,
     String sessionTitle,
-    Decimal tipPct,
-  ) {
+    Decimal tipPct, {
+    bool useIndividualTips = false,
+    Map<String, int> perPersonTipBps = const {},
+    bool useFlexSplit = false,
+  }) {
     final buf = StringBuffer();
     buf.writeln('$sessionTitle — Split via DivvyBill');
     buf.writeln('');
     for (final r in results) {
-      buf.writeln(
-          '${r.person.name}: $currencyCode ${r.total.toStringAsFixed(2)}');
+      if (useIndividualTips && perPersonTipBps.containsKey(r.person.id)) {
+        final bps = perPersonTipBps[r.person.id]!;
+        final pct = bps ~/ 100;
+        final tipSuffix = pct == 0 ? ' (no tip)' : ' (incl. $pct% tip)';
+        buf.writeln(
+            '${r.person.name}: $currencyCode ${r.total.toStringAsFixed(2)}$tipSuffix');
+      } else {
+        buf.writeln(
+            '${r.person.name}: $currencyCode ${r.total.toStringAsFixed(2)}');
+      }
     }
     buf.writeln('');
     buf.writeln(
-        'Total incl. ${tipPct.toStringAsFixed(0)}% tip: $currencyCode ${grandTotal.toStringAsFixed(2)}');
+        '${_totalLabel(tipPct, useIndividualTips: useIndividualTips, perPersonTipBps: perPersonTipBps, useFlexSplit: useFlexSplit)}: $currencyCode ${grandTotal.toStringAsFixed(2)}');
     return buf.toString();
   }
+
 
   Future<void> _shareText(String text) async {
     await SharePlus.instance.share(ShareParams(text: text));
@@ -192,12 +204,19 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
     final tip = notifier.computedTip;
     final tipPct = calcState.tipPercentage;
     final currencyCode = calcState.currencyCode;
+    final useIndividualTips = calcState.useIndividualTips;
+    final perPersonTipBps = calcState.perPersonTipBps;
+    final useFlexSplit = calcState.useFlexSplit;
     final sessionTitle = calcState.sessionLabel?.isNotEmpty == true
         ? calcState.sessionLabel!
         : 'Split Session';
     final today = DateFormat('MMM d').format(DateTime.now()).toUpperCase();
     final textSummary = _buildTextSummary(
-        results, grandTotal, currencyCode, sessionTitle, tipPct);
+      results, grandTotal, currencyCode, sessionTitle, tipPct,
+      useIndividualTips: useIndividualTips,
+      perPersonTipBps: perPersonTipBps,
+      useFlexSplit: useFlexSplit,
+    );
 
     final adsEnabled = _adsEnabled;
 
@@ -252,6 +271,9 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
                         currencyCode: currencyCode,
                         sessionTitle: sessionTitle,
                         dateLabel: today,
+                        useIndividualTips: useIndividualTips,
+                        perPersonTipBps: perPersonTipBps,
+                        useFlexSplit: useFlexSplit,
                       ),
                     ).animate().fade(duration: 350.ms).slideY(
                         begin: -0.04,
@@ -431,6 +453,27 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
   }
 }
 
+// ── Share helpers ─────────────────────────────────────────────────────────
+
+String _totalLabel(
+  Decimal tipPct, {
+  bool useIndividualTips = false,
+  Map<String, int> perPersonTipBps = const {},
+  bool useFlexSplit = false,
+}) {
+  if (useFlexSplit) return 'Total · customized split';
+  if (useIndividualTips && perPersonTipBps.isNotEmpty) {
+    final uniqueBps = perPersonTipBps.values.toSet();
+    if (uniqueBps.length == 1) {
+      final pct = uniqueBps.first ~/ 100;
+      return pct == 0 ? 'Total · no tip' : 'Total · incl. $pct% tip';
+    }
+    return 'Total · incl. tip';
+  }
+  if (tipPct == Decimal.zero) return 'Total · no tip';
+  return 'Total · incl. ${tipPct.toStringAsFixed(0)}% tip';
+}
+
 // ── Result Card ───────────────────────────────────────────────────────────
 
 class _ResultCard extends StatelessWidget {
@@ -442,6 +485,9 @@ class _ResultCard extends StatelessWidget {
     required this.currencyCode,
     required this.sessionTitle,
     required this.dateLabel,
+    this.useIndividualTips = false,
+    this.perPersonTipBps = const {},
+    this.useFlexSplit = false,
   });
 
   final List<SplitResult> results;
@@ -451,6 +497,9 @@ class _ResultCard extends StatelessWidget {
   final String currencyCode;
   final String sessionTitle;
   final String dateLabel;
+  final bool useIndividualTips;
+  final Map<String, int> perPersonTipBps;
+  final bool useFlexSplit;
 
   @override
   Widget build(BuildContext context) {
@@ -594,14 +643,36 @@ class _ResultCard extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            Text(
-                              '$currencyCode ${r.total.toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                fontFamily: '.SF Pro Display',
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  '$currencyCode ${r.total.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    fontFamily: '.SF Pro Display',
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w700,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                if (useIndividualTips &&
+                                    perPersonTipBps.containsKey(r.person.id))
+                                  Builder(builder: (_) {
+                                    final bps =
+                                        perPersonTipBps[r.person.id]!;
+                                    final pct = bps ~/ 100;
+                                    return Text(
+                                      pct == 0 ? 'no tip' : '$pct% tip',
+                                      style: const TextStyle(
+                                        fontFamily: '.SF Pro Text',
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w500,
+                                        color: Colors.white54,
+                                      ),
+                                    );
+                                  }),
+                              ],
                             ),
                           ],
                         ),
@@ -621,7 +692,12 @@ class _ResultCard extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  'Total · incl. ${tipPct.toStringAsFixed(0)}% tip',
+                  _totalLabel(
+                    tipPct,
+                    useIndividualTips: useIndividualTips,
+                    perPersonTipBps: perPersonTipBps,
+                    useFlexSplit: useFlexSplit,
+                  ),
                   style: const TextStyle(
                     fontFamily: '.SF Pro Text',
                     fontSize: 13,

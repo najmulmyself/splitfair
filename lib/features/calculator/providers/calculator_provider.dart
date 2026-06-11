@@ -156,8 +156,18 @@ class CalculatorNotifier extends _$CalculatorNotifier {
   }
 
   /// Sets the tip percentage (e.g. 18 for 18%).
+  /// When individual tips are active, also syncs all per-person tips to the new value.
   void setTipPercentage(Decimal percentage) {
-    state = state.copyWith(tipPercentage: percentage);
+    if (state.useIndividualTips && state.perPersonTipBps.isNotEmpty) {
+      final bps = (percentage * Decimal.fromInt(100))
+          .round(scale: 0)
+          .toBigInt()
+          .toInt();
+      final updated = {for (final id in state.perPersonTipBps.keys) id: bps};
+      state = state.copyWith(tipPercentage: percentage, perPersonTipBps: updated);
+    } else {
+      state = state.copyWith(tipPercentage: percentage);
+    }
   }
 
   /// Toggles tip calculation base between subtotal and subtotal + tax.
@@ -247,18 +257,23 @@ class CalculatorNotifier extends _$CalculatorNotifier {
   /// Toggles individual tips mode on/off.
   void toggleIndividualTips() {
     final next = !state.useIndividualTips;
-    // Pre-fill everyone with the current global tip when enabling.
+    // Start everyone at the current global tip % when enabling individual tips.
+    final defaultBps = next
+        ? (state.tipPercentage * Decimal.fromInt(100))
+            .round(scale: 0)
+            .toBigInt()
+            .toInt()
+        : 0;
     final bps = next
-        ? {
-            for (final p in state.people)
-              p.id: (state.tipPercentage * Decimal.fromInt(100))
-                  .round(scale: 0)
-                  .toBigInt()
-                  .toInt()
-          }
+        ? {for (final p in state.people) p.id: defaultBps}
         : <String, int>{};
     state = state.copyWith(
-        useIndividualTips: next, perPersonTipBps: bps);
+      useIndividualTips: next,
+      perPersonTipBps: bps,
+      // Mutually exclusive with flex split — turn it off when enabling.
+      useFlexSplit: next ? false : state.useFlexSplit,
+      flexOverrides: next ? const {} : state.flexOverrides,
+    );
   }
 
   /// Sets a person's individual tip percentage.
@@ -280,6 +295,9 @@ class CalculatorNotifier extends _$CalculatorNotifier {
     state = state.copyWith(
       useFlexSplit: next,
       flexOverrides: const {},
+      // Mutually exclusive with individual tips — turn it off when enabling.
+      useIndividualTips: next ? false : state.useIndividualTips,
+      perPersonTipBps: next ? const {} : state.perPersonTipBps,
     );
   }
 

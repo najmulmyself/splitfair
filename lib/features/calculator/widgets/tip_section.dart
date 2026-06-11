@@ -18,6 +18,7 @@ class TipSection extends StatelessWidget {
     this.onGuideTap,
     this.hasTax = false,
     this.tipSavings,
+    this.disabled = false,
   });
 
   final Decimal selectedTip;
@@ -30,10 +31,17 @@ class TipSection extends StatelessWidget {
   final bool hasTax;
   /// Dollar difference between tipping on total vs subtotal. Non-null when hasTax.
   final Decimal? tipSavings;
+  /// When true, dims the section and blocks interaction (individual tips active).
+  final bool disabled;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return IgnorePointer(
+      ignoring: disabled,
+      child: AnimatedOpacity(
+        opacity: disabled ? 0.35 : 1.0,
+        duration: const Duration(milliseconds: 200),
+        child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ── Section label ─────────────────────────────────────
@@ -52,29 +60,41 @@ class TipSection extends StatelessWidget {
         ),
 
         // ── Preset chips ─────────────────────────────────────
-        Row(
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            ..._kPresets.asMap().entries.map((e) {
-              final i = e.key;
-              final pct = e.value;
-              final d = Decimal.fromInt(pct);
-              final isSelected = selectedTip == d;
-              return Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 6),
-                  child: _TipChip(
-                    label: '$pct%',
-                    sublabel: _kLabels[i],
-                    selected: isSelected,
-                    onTap: () => onTipSelected(d),
+        Builder(builder: (context) {
+          final isCustomTip =
+              !_kPresets.any((p) => selectedTip == Decimal.fromInt(p));
+          // Format label: drop trailing .0 for whole numbers
+          final customLabel = selectedTip == selectedTip.truncate()
+              ? '${selectedTip.toStringAsFixed(0)}%'
+              : '${selectedTip.toStringAsFixed(1)}%';
+          return Row(
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              ..._kPresets.asMap().entries.map((e) {
+                final i = e.key;
+                final pct = e.value;
+                final d = Decimal.fromInt(pct);
+                final isSelected = selectedTip == d;
+                return Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: _TipChip(
+                      label: '$pct%',
+                      sublabel: _kLabels[i],
+                      selected: isSelected,
+                      onTap: () => onTipSelected(d),
+                    ),
                   ),
-                ),
-              );
-            }),
-            _MoreButton(onTap: onMoreTap),
-          ],
-        ),
+                );
+              }),
+              _MoreButton(
+                onTap: onMoreTap,
+                isCustom: isCustomTip,
+                customLabel: customLabel,
+              ),
+            ],
+          );
+        }),
 
         const SizedBox(height: 12),
 
@@ -155,6 +175,8 @@ class TipSection extends StatelessWidget {
           ),
         ],
       ],
+        ),
+      ),
     );
   }
 }
@@ -233,27 +255,47 @@ class _TipChip extends StatelessWidget {
 // ── More button ───────────────────────────────────────────────────────────
 
 class _MoreButton extends StatelessWidget {
-  const _MoreButton({required this.onTap});
+  const _MoreButton({
+    required this.onTap,
+    this.isCustom = false,
+    this.customLabel = '···',
+  });
   final VoidCallback onTap;
+  final bool isCustom;
+  final String customLabel;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: context.colors.surface2,
+          color: isCustom ? AppColors.primaryViolet : context.colors.surface2,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: context.colors.borderDefault),
+          border: Border.all(
+            color: isCustom
+                ? AppColors.primaryViolet
+                : context.colors.borderDefault,
+          ),
+          boxShadow: isCustom
+              ? [
+                  BoxShadow(
+                    color: AppColors.primaryViolet.withOpacity(0.35),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  )
+                ]
+              : [],
         ),
         child: Text(
-          '···',
+          isCustom ? customLabel : '···',
           style: TextStyle(
             fontFamily: '.SF Pro Text',
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: context.colors.textSecondary,
+            fontSize: isCustom ? 13 : 14,
+            fontWeight: FontWeight.w700,
+            color: isCustom ? Colors.white : context.colors.textSecondary,
           ),
         ),
       ),

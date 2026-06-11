@@ -407,6 +407,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                         },
                         onMoreTap: _showCustomTipDialog,
                         onGuideTap: _showTipGuide,
+                        disabled: calcState.useIndividualTips,
                       ).animate().fade(duration: 280.ms).slideY(
                           begin: 0.08,
                           end: 0,
