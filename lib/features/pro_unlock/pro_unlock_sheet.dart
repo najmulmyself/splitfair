@@ -25,7 +25,7 @@ class ProUnlockSheet extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(24, 60, 24, 32),
               child: Column(
                 children: [
-                  // Camera icon
+                  // Hero icon
                   _HeroIcon().animate().fade(duration: 400.ms).scale(
                       begin: const Offset(0.7, 0.7),
                       duration: 500.ms,
@@ -35,7 +35,7 @@ class ProUnlockSheet extends ConsumerWidget {
 
                   // Title
                   Text(
-                    'Unlock Receipt Scanner',
+                    'Go Ad-Free with SplitFair Pro',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: '.SF Pro Display',
@@ -50,7 +50,7 @@ class ProUnlockSheet extends ConsumerWidget {
 
                   // Subtitle
                   Text(
-                    'Scan any receipt. Items assigned in seconds.',
+                    'One purchase. No subscription. Yours forever.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: '.SF Pro Text',
@@ -64,23 +64,23 @@ class ProUnlockSheet extends ConsumerWidget {
 
                   // Feature bullets
                   _FeatureRow(
-                    icon: Icons.camera_alt_rounded,
-                    iconColor: AppColors.primaryViolet,
-                    text: 'Scan any receipt in seconds',
+                    icon: Icons.block_rounded,
+                    iconColor: AppColors.coralPink,
+                    text: 'Remove all banner & interstitial ads',
                     delay: 160.ms,
                   ),
                   const SizedBox(height: 14),
                   _FeatureRow(
-                    icon: Icons.auto_awesome_rounded,
-                    iconColor: AppColors.coralPink,
-                    text: 'Assign items with one tap',
+                    icon: Icons.picture_as_pdf_rounded,
+                    iconColor: AppColors.primaryViolet,
+                    text: 'Export any split as a PDF',
                     delay: 200.ms,
                   ),
                   const SizedBox(height: 14),
                   _FeatureRow(
-                    icon: Icons.shield_rounded,
+                    icon: Icons.favorite_rounded,
                     iconColor: AppColors.emeraldMint,
-                    text: 'All data stays on your iPhone',
+                    text: 'Support independent development',
                     delay: 240.ms,
                   ),
 
@@ -125,7 +125,7 @@ class ProUnlockSheet extends ConsumerWidget {
                           color: context.colors.textTertiary,
                         ),
                         children: [
-                          TextSpan(text: 'Already purchased? '),
+                          const TextSpan(text: 'Already purchased? '),
                           TextSpan(
                             text: 'Restore',
                             style: TextStyle(
@@ -211,8 +211,9 @@ class _HeroIcon extends StatelessWidget {
             ],
           ),
         ),
-        // Camera icon
-        const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 52),
+        // Star icon
+        const Icon(Icons.workspace_premium_rounded,
+            color: Colors.white, size: 52),
         // Badge (bottom-right)
         Positioned(
           bottom: 4,
@@ -269,13 +270,15 @@ class _FeatureRow extends StatelessWidget {
           child: Icon(icon, color: iconColor, size: 18),
         ),
         const SizedBox(width: 16),
-        Text(
-          text,
-          style: TextStyle(
-            fontFamily: '.SF Pro Text',
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: context.colors.textPrimary,
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontFamily: '.SF Pro Text',
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              color: context.colors.textPrimary,
+            ),
           ),
         ),
       ],
@@ -303,7 +306,7 @@ class _PriceBlock extends StatelessWidget {
               color: context.colors.textPrimary,
             ),
             children: [
-              TextSpan(text: '\$2.99'),
+              const TextSpan(text: '\$2.99'),
               TextSpan(
                 text: ' once',
                 style: TextStyle(

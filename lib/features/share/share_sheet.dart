@@ -17,6 +17,8 @@ import '../../data/sources/tip_guide_data_source.dart';
 import '../../shared/widgets/admob/ad_config.dart';
 import '../../shared/widgets/admob/banner_ad_widget.dart';
 import '../../shared/widgets/admob/interstitial_ad_service.dart';
+import 'package:go_router/go_router.dart';
+import '../../core/router/app_router.dart';
 import '../calculator/providers/calculator_provider.dart';
 import '../settings/settings_provider.dart';
 
@@ -36,6 +38,8 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
     final isPro = ref.read(settingsNotifierProvider).isPro;
     return !isPro && repo.sessionCount >= AdConfig.adFreeSessionThreshold;
   }
+
+  bool get _isPro => ref.read(settingsNotifierProvider).isPro;
 
   Future<void> _triggerInterstitial() async {
     if (!_adsEnabled) return;
@@ -310,16 +314,34 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
                         ),
                         _SendButton(
                           label: 'PDF',
-                          color: const Color(0xFFE74C3C),
-                          child: const Text('PDF',
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w800,
-                                  fontFamily: '.SF Pro Display')),
+                          color: _isPro
+                              ? const Color(0xFFE74C3C)
+                              : const Color(0xFF9E9E9E),
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              const Text('PDF',
+                                  style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w800,
+                                      fontFamily: '.SF Pro Display')),
+                              if (!_isPro)
+                                const Positioned(
+                                  top: 0,
+                                  right: 0,
+                                  child: Icon(Icons.lock_rounded,
+                                      color: Colors.white, size: 10),
+                                ),
+                            ],
+                          ),
                           onTap: () {
                             Haptics.impact();
-                            _sharePdf(textSummary);
+                            if (_isPro) {
+                              _sharePdf(textSummary);
+                            } else {
+                              context.push(AppRoutes.proUnlock);
+                            }
                           },
                         ),
                       ],

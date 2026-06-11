@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 
 import 'data/models/person.dart';
 import 'data/models/split_item.dart';
@@ -37,8 +39,14 @@ void main() async {
     ),
   );
 
-  // ── AdMob (initialised after app is visible) ─────────────────
-  MobileAds.instance.initialize().then((_) {
-    InterstitialAdService.instance.preload();
+  // ── AdMob + ATT (after first frame so prompt is visible) ─────
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    if (Platform.isIOS) {
+      // Show ATT prompt — required before AdMob accesses IDFA on iOS 14.5+
+      await AppTrackingTransparency.requestTrackingAuthorization();
+    }
+    MobileAds.instance.initialize().then((_) {
+      InterstitialAdService.instance.preload();
+    });
   });
 }

@@ -253,10 +253,7 @@
 	<string>SplitFair needs access to your photo library to scan receipt images.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>SplitFair needs camera access to scan receipts.</string>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsArbitraryLoads</key>
-		<true/>
-	</dict>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>We use your device's advertising identifier to show relevant ads and measure ad performance. You can change this in Settings at any time.</string>
 </dict>
 </plist>
