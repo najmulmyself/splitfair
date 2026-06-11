@@ -35,7 +35,7 @@ void main() async {
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
       ],
-      child: const SplitFairApp(),
+      child: const DivvyBillApp(),
     ),
   );
 

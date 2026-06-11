@@ -4,11 +4,11 @@ import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'features/settings/settings_provider.dart';
 
-/// Root widget of the SplitFair application.
+/// Root widget of the DivvyBill application.
 ///
 /// Sets up [MaterialApp.router] with [GoRouter], theming, and Riverpod.
-class SplitFairApp extends ConsumerWidget {
-  const SplitFairApp({super.key});
+class DivvyBillApp extends ConsumerWidget {
+  const DivvyBillApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -22,7 +22,7 @@ class SplitFairApp extends ConsumerWidget {
     };
 
     return MaterialApp.router(
-      title: 'SplitFair',
+      title: 'DivvyBill',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,

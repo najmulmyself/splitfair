@@ -574,7 +574,7 @@ class _CalcAppBar extends StatelessWidget {
           _LogoMark(),
           const SizedBox(width: 10),
           Text(
-            'SplitFair',
+            'DivvyBill',
             style: TextStyle(
               fontFamily: '.SF Pro Display',
               fontSize: 20,

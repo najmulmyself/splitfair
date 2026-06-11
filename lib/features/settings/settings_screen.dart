@@ -100,7 +100,7 @@ class SettingsScreen extends ConsumerWidget {
                     _SectionLabel('UPGRADE'),
                     _SettingsCard(children: [
                       _NavRow(
-                        label: '✓ SplitFair Pro',
+                        label: '✓ DivvyBill Pro',
                         trailing: 'Active',
                         onTap: () {},
                       ),
@@ -110,13 +110,13 @@ class SettingsScreen extends ConsumerWidget {
                   _SectionLabel('SUPPORT'),
                   _SettingsCard(children: [
                     _NavRow(
-                      label: 'Rate SplitFair',
+                      label: 'Rate DivvyBill',
                       onTap: () =>
                           _openUrl('https://apps.apple.com/app/id000000000'),
                     ),
                     const _CardDivider(),
                     _NavRow(
-                      label: 'Share SplitFair',
+                      label: 'Share DivvyBill',
                       onTap: _shareApp,
                     ),
                     const _CardDivider(),
@@ -158,7 +158,7 @@ class SettingsScreen extends ConsumerWidget {
     await SharePlus.instance.share(
       ShareParams(
         text:
-            'Split bills effortlessly with SplitFair!\nhttps://apps.apple.com/app/id000000000',
+            'Split bills effortlessly with DivvyBill!\nhttps://apps.apple.com/app/id000000000',
       ),
     );
   }
@@ -228,7 +228,7 @@ class _SettingsAppBar extends StatelessWidget {
                 Icon(Icons.chevron_left_rounded,
                     color: AppColors.primaryViolet, size: 24),
                 Text(
-                  'SplitFair',
+                  'DivvyBill',
                   style: TextStyle(
                     fontFamily: '.SF Pro Text',
                     fontSize: 17,

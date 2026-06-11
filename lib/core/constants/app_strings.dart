@@ -2,7 +2,7 @@
 /// Always use AppStrings.X
 abstract class AppStrings {
   // ── App ─────────────────────────────────────────────────────
-  static const appName = 'SplitFair';
+  static const appName = 'DivvyBill';
   static const appTagline = 'Split Bills Free. No Signup.';
 
   // ── Onboarding ──────────────────────────────────────────────
@@ -19,7 +19,7 @@ abstract class AppStrings {
       'Send payment links via Venmo, Cash App, or PayPal. Or just share a screenshot.';
 
   // ── Calculator ──────────────────────────────────────────────
-  static const calculatorTitle = 'SplitFair';
+  static const calculatorTitle = 'DivvyBill';
   static const subtotalLabel = 'Subtotal';
   static const taxLabel = 'Tax';
   static const tipLabel = 'Tip';
@@ -85,7 +85,7 @@ abstract class AppStrings {
   static const bkashNumberPromptTitle = 'Enter bKash Number';
   static const nagadNumberPromptTitle = 'Enter Nagad Number';
   static const mobileNumberHint = '01XXXXXXXXX';
-  static const shareFooter = 'Sent via SplitFair';
+  static const shareFooter = 'Sent via DivvyBill';
   static const shareLabel = 'Split';
   static const imageSavedSuccess = 'Image saved to Photos';
   static const textCopiedSuccess = 'Copied to clipboard';
@@ -108,8 +108,8 @@ abstract class AppStrings {
   static const settingsThemeDark = 'Dark';
   static const settingsThemeLight = 'Light';
   static const settingsThemeSystem = 'System';
-  static const settingsRateApp = 'Rate SplitFair';
-  static const settingsShareApp = 'Share SplitFair';
+  static const settingsRateApp = 'Rate DivvyBill';
+  static const settingsShareApp = 'Share DivvyBill';
   static const settingsPrivacyPolicy = 'Privacy Policy';
   static const settingsBuyACoffee = 'Buy us a coffee ☕';
   static const settingsBuyACoffeePrice = '\$0.99';
@@ -124,7 +124,7 @@ abstract class AppStrings {
   static const historyClear = 'Clear History';
   static const historyClearConfirm = 'Clear all split history?';
   static const historyDuplicate = 'Duplicate';
-  static const historyProRequired = 'History requires SplitFair Pro';
+  static const historyProRequired = 'History requires DivvyBill Pro';
 
   // ── Receipt scanner ──────────────────────────────────────────
   static const scannerTitle = 'Scan Receipt';
@@ -132,10 +132,10 @@ abstract class AppStrings {
   static const scannerGallery = 'Choose from Library';
   static const scannerProcessing = 'Reading receipt…';
   static const scannerNoItemsFound = 'No items found';
-  static const scannerProRequired = 'Receipt Scanner requires SplitFair Pro';
+  static const scannerProRequired = 'Receipt Scanner requires DivvyBill Pro';
 
   // ── Pro unlock ──────────────────────────────────────────────
-  static const proTitle = 'SplitFair Pro';
+  static const proTitle = 'DivvyBill Pro';
   static const proSubtitle = 'Unlock everything. One time.';
   static const proPriceLabel = '\$2.99';
   static const proFeature1 = 'Split history — last 20 sessions';
@@ -144,11 +144,11 @@ abstract class AppStrings {
   static const proFeature4 = 'No ads, ever';
   static const proBuyButton = 'Unlock Pro — \$2.99';
   static const proRestoreButton = 'Restore Purchase';
-  static const proAlreadyOwned = 'You already own SplitFair Pro';
+  static const proAlreadyOwned = 'You already own DivvyBill Pro';
   static const proRestoreSuccess = 'Purchase restored';
   static const proRestoreFailed = 'No purchase found to restore';
   static const proPurchaseFailed = 'Purchase failed. Please try again.';
-  static const proPurchaseSuccess = 'Welcome to SplitFair Pro!';
+  static const proPurchaseSuccess = 'Welcome to DivvyBill Pro!';
 
   // ── Errors / validation ─────────────────────────────────────
   static const invalidAmount = 'Please enter a valid amount';

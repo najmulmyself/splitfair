@@ -1,45 +1,66 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
-.DS_Store
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
-
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
-.idea/
-
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
-
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
+# Flutter/Dart
 .dart_tool/
+build/
+*.iml
+.flutter-plugins
 .flutter-plugins-dependencies
-.pub-cache/
-.pub/
-/build/
-/coverage/
 
-# Symbolication related
-app.*.symbols
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
 
-# Obfuscation related
-app.*.map.json
+# macOS
+macos/Flutter/GeneratedPluginRegistrant.swift
+macos/Flutter/ephemeral/
 
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
+# Xcode
+*.xcworkspace
+!ios/Runner.xcworkspace
+DerivedData/
+*.moved-aside
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivefile
+!default.perspectivefile
+xcuserdata/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Claude Code / agent tooling
+.agents/
+.claude/
+skills-lock.json
+
+# App Store screenshot tool (Next.js)
+node_modules/
+.next/
+out/
+app-store-screenshots.json
+bun.lock
+components.json
+next.config.mjs
+package.json
+package-lock.json
+pnpm-lock.yaml
+postcss.config.mjs
+public/
+raw_screenshots/
+src/
+tailwind.config.ts
+tsconfig.json
+*.tsbuildinfo
+next-env.d.ts
+.env*.local
+
+# macOS
+.DS_Store

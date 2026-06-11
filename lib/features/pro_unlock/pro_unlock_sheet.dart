@@ -35,7 +35,7 @@ class ProUnlockSheet extends ConsumerWidget {
 
                   // Title
                   Text(
-                    'Go Ad-Free with SplitFair Pro',
+                    'Go Ad-Free with DivvyBill Pro',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontFamily: '.SF Pro Display',
@@ -380,7 +380,7 @@ class _UnlockButton extends StatelessWidget {
                       color: Colors.white, strokeWidth: 2.5),
                 )
               : const Text(
-                  'Unlock SplitFair Pro — \$2.99',
+                  'Unlock DivvyBill Pro — \$2.99',
                   style: TextStyle(
                     fontFamily: '.SF Pro Display',
                     fontSize: 17,

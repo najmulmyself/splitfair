@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>SplitFair</string>
+	<string>DivvyBill</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>splitfair</string>
+	<string>DivvyBill</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -250,9 +250,9 @@
 		</dict>
 	</array>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>SplitFair needs access to your photo library to scan receipt images.</string>
+	<string>DivvyBill needs access to your photo library to scan receipt images.</string>
 	<key>NSCameraUsageDescription</key>
-	<string>SplitFair needs camera access to scan receipts.</string>
+	<string>DivvyBill needs camera access to scan receipts.</string>
 	<key>NSUserTrackingUsageDescription</key>
 	<string>We use your device's advertising identifier to show relevant ads and measure ad performance. You can change this in Settings at any time.</string>
 </dict>

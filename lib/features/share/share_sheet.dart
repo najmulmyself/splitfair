@@ -65,7 +65,7 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
     Decimal tipPct,
   ) {
     final buf = StringBuffer();
-    buf.writeln('$sessionTitle — Split via SplitFair');
+    buf.writeln('$sessionTitle — Split via DivvyBill');
     buf.writeln('');
     for (final r in results) {
       buf.writeln(
@@ -89,7 +89,7 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
       return;
     }
     final xFile =
-        XFile.fromData(bytes, mimeType: 'image/png', name: 'splitfair.png');
+        XFile.fromData(bytes, mimeType: 'image/png', name: 'divvybill.png');
     await SharePlus.instance.share(ShareParams(files: [xFile], text: text));
     _triggerInterstitial();
   }
@@ -167,7 +167,7 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
     final xFile = XFile.fromData(
       Uint8List.fromList(pdfBytes),
       mimeType: 'application/pdf',
-      name: 'splitfair_result.pdf',
+      name: 'divvybill_result.pdf',
     );
     await SharePlus.instance.share(ShareParams(files: [xFile], text: text));
     _triggerInterstitial();
@@ -496,7 +496,7 @@ class _ResultCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                // SplitFair badge
+                // DivvyBill badge
                 Row(
                   children: [
                     ClipRRect(
@@ -510,7 +510,7 @@ class _ResultCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 5),
                     const Text(
-                      'SplitFair',
+                      'DivvyBill',
                       style: TextStyle(
                         fontFamily: '.SF Pro Text',
                         fontSize: 12,

@@ -30,9 +30,9 @@ class ObSplash extends StatelessWidget {
 
           const SizedBox(height: 28),
 
-          // ── SplitFair ────────────────────────────────────────
+          // ── DivvyBill ────────────────────────────────────────
           Text(
-            'SplitFair',
+            'DivvyBill',
             style: TextStyle(
               fontFamily: '.SF Pro Display',
               fontSize: 40,

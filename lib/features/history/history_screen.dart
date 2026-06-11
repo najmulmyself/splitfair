@@ -125,7 +125,7 @@ class _HistoryAppBar extends StatelessWidget {
                 Icon(Icons.chevron_left_rounded,
                     color: AppColors.primaryViolet, size: 24),
                 Text(
-                  'SplitFair',
+                  'DivvyBill',
                   style: TextStyle(
                     fontFamily: '.SF Pro Text',
                     fontSize: 17,
