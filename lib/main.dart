@@ -1,10 +1,8 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 
 import 'data/models/person.dart';
 import 'data/models/split_item.dart';
@@ -39,18 +37,12 @@ void main() async {
     ),
   );
 
-  // ── AdMob + ATT (after first frame so prompt is visible) ─────
-  WidgetsBinding.instance.addPostFrameCallback((_) async {
-    if (Platform.isIOS) {
-      // Delay ensures root view controller is fully presented before the
-      // system displays the ATT modal (required on iPadOS 26+).
-      await Future.delayed(const Duration(milliseconds: 500));
-      final status =
-          await AppTrackingTransparency.trackingAuthorizationStatus;
-      if (status == TrackingStatus.notDetermined) {
-        await AppTrackingTransparency.requestTrackingAuthorization();
-      }
-    }
+  // ── AdMob ────────────────────────────────────────────────────
+  // ATT is requested from the first screen's initState so the modal
+  // fires only after the root view controller is fully visible (required
+  // on iPadOS 26+). Initialise AdMob here without waiting for ATT —
+  // the SDK handles the IDFA internally after consent is granted.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
     MobileAds.instance.initialize().then((_) {
       InterstitialAdService.instance.preload();
     });

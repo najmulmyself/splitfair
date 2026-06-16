@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -50,7 +52,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       final settingsCurrency = ref.read(currencyNotifierProvider);
       ref
           .read(calculatorNotifierProvider.notifier)
@@ -58,8 +60,19 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       _loadActiveCurrencyByCode(settingsCurrency);
       _checkDraft();
       _incrementSessionAndMaybeShowPro();
+      _requestAttIfNeeded();
     });
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
+  }
+
+  Future<void> _requestAttIfNeeded() async {
+    if (!Platform.isIOS) return;
+    await Future.delayed(const Duration(seconds: 1));
+    if (!mounted) return;
+    final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+    if (status == TrackingStatus.notDetermined) {
+      await AppTrackingTransparency.requestTrackingAuthorization();
+    }
   }
 
   // ── Draft save / restore ──────────────────────────────────────

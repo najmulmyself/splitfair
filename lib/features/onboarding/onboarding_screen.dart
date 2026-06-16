@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -60,6 +62,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
     // Auto-advance from splash after 2.4 s
     Future.delayed(const Duration(milliseconds: 2400), _exitSplash);
+
+    // Request ATT after the first frame is visible (1 s gives the
+    // root view controller time to fully present on iPadOS 26+)
+    WidgetsBinding.instance.addPostFrameCallback((_) => _requestAttIfNeeded());
+  }
+
+  Future<void> _requestAttIfNeeded() async {
+    if (!Platform.isIOS) return;
+    await Future.delayed(const Duration(seconds: 1));
+    if (!mounted) return;
+    final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+    if (status == TrackingStatus.notDetermined) {
+      await AppTrackingTransparency.requestTrackingAuthorization();
+    }
   }
 
   @override
