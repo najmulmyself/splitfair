@@ -32,6 +32,7 @@ class ShareSheet extends ConsumerStatefulWidget {
 
 class _ShareSheetState extends ConsumerState<ShareSheet> {
   final _screenshotController = ScreenshotController();
+  final _shareRowKey = GlobalKey();
 
   bool get _adsEnabled {
     final repo = ref.read(settingsRepositoryProvider);
@@ -45,6 +46,15 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
     if (!_adsEnabled) return;
     await Future.delayed(const Duration(milliseconds: 600));
     await InterstitialAdService.instance.show();
+  }
+
+  // Returns a Rect for iPad share-sheet popover anchoring.
+  Rect get _sharePopoverOrigin {
+    final box =
+        _shareRowKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box == null) return Rect.zero;
+    final pos = box.localToGlobal(Offset.zero);
+    return pos & box.size;
   }
 
   // ── Helpers ───────────────────────────────────────────────────
@@ -90,7 +100,8 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
 
 
   Future<void> _shareText(String text) async {
-    await SharePlus.instance.share(ShareParams(text: text));
+    await SharePlus.instance
+        .share(ShareParams(text: text, positionOrigin: _sharePopoverOrigin));
     _triggerInterstitial();
   }
 
@@ -102,7 +113,8 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
     }
     final xFile =
         XFile.fromData(bytes, mimeType: 'image/png', name: 'divvybill.png');
-    await SharePlus.instance.share(ShareParams(files: [xFile], text: text));
+    await SharePlus.instance.share(
+        ShareParams(files: [xFile], text: text, positionOrigin: _sharePopoverOrigin));
     _triggerInterstitial();
   }
 
@@ -181,7 +193,8 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
       mimeType: 'application/pdf',
       name: 'divvybill_result.pdf',
     );
-    await SharePlus.instance.share(ShareParams(files: [xFile], text: text));
+    await SharePlus.instance.share(
+        ShareParams(files: [xFile], text: text, positionOrigin: _sharePopoverOrigin));
     _triggerInterstitial();
   }
 
@@ -287,6 +300,7 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
                     _SectionLabel(label: 'SEND VIA'),
                     const SizedBox(height: 14),
                     Row(
+                      key: _shareRowKey,
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         _SendButton(

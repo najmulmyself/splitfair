@@ -42,8 +42,14 @@ void main() async {
   // ── AdMob + ATT (after first frame so prompt is visible) ─────
   WidgetsBinding.instance.addPostFrameCallback((_) async {
     if (Platform.isIOS) {
-      // Show ATT prompt — required before AdMob accesses IDFA on iOS 14.5+
-      await AppTrackingTransparency.requestTrackingAuthorization();
+      // Delay ensures root view controller is fully presented before the
+      // system displays the ATT modal (required on iPadOS 26+).
+      await Future.delayed(const Duration(milliseconds: 500));
+      final status =
+          await AppTrackingTransparency.trackingAuthorizationStatus;
+      if (status == TrackingStatus.notDetermined) {
+        await AppTrackingTransparency.requestTrackingAuthorization();
+      }
     }
     MobileAds.instance.initialize().then((_) {
       InterstitialAdService.instance.preload();
