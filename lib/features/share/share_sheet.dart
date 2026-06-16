@@ -100,8 +100,7 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
 
 
   Future<void> _shareText(String text) async {
-    await SharePlus.instance
-        .share(ShareParams(text: text, positionOrigin: _sharePopoverOrigin));
+    await Share.share(text, sharePositionOrigin: _sharePopoverOrigin);
     _triggerInterstitial();
   }
 
@@ -113,8 +112,8 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
     }
     final xFile =
         XFile.fromData(bytes, mimeType: 'image/png', name: 'divvybill.png');
-    await SharePlus.instance.share(
-        ShareParams(files: [xFile], text: text, positionOrigin: _sharePopoverOrigin));
+    await Share.shareXFiles([xFile],
+        text: text, sharePositionOrigin: _sharePopoverOrigin);
     _triggerInterstitial();
   }
 
@@ -193,8 +192,8 @@ class _ShareSheetState extends ConsumerState<ShareSheet> {
       mimeType: 'application/pdf',
       name: 'divvybill_result.pdf',
     );
-    await SharePlus.instance.share(
-        ShareParams(files: [xFile], text: text, positionOrigin: _sharePopoverOrigin));
+    await Share.shareXFiles([xFile],
+        text: text, sharePositionOrigin: _sharePopoverOrigin);
     _triggerInterstitial();
   }
 
