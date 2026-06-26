@@ -12,7 +12,10 @@ import '../../data/models/person.dart';
 import '../../data/models/split_result.dart';
 import '../../data/models/split_session.dart';
 import '../../domain/calculators/result_calculator.dart';
+import '../../shared/widgets/admob/ad_config.dart';
+import '../../shared/widgets/admob/banner_ad_widget.dart';
 import '../calculator/providers/calculator_provider.dart';
+import '../settings/settings_provider.dart';
 import 'history_provider.dart';
 
 class HistoryScreen extends ConsumerStatefulWidget {
@@ -71,6 +74,12 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     );
   }
 
+  bool get _adsEnabled {
+    final repo = ref.read(settingsRepositoryProvider);
+    final isPro = ref.read(settingsNotifierProvider).isPro;
+    return !isPro && repo.sessionCount >= AdConfig.adFreeSessionThreshold;
+  }
+
   void _onDuplicateTapped(SplitSession session) {
     Haptics.impact();
     ref.read(calculatorNotifierProvider.notifier).loadFromSession(session);
@@ -113,6 +122,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                         _expandedIds.remove(session.id);
                       },
                       onDuplicate: _onDuplicateTapped,
+                      adsEnabled: _adsEnabled,
                     ),
             ),
           ],
@@ -187,6 +197,7 @@ class _SessionList extends StatelessWidget {
     required this.onConfirmDelete,
     required this.onDelete,
     required this.onDuplicate,
+    required this.adsEnabled,
   });
 
   final List<SplitSession> sessions;
@@ -195,6 +206,7 @@ class _SessionList extends StatelessWidget {
   final Future<bool?> Function(SplitSession) onConfirmDelete;
   final ValueChanged<SplitSession> onDelete;
   final ValueChanged<SplitSession> onDuplicate;
+  final bool adsEnabled;
 
   static const _adIndex = 3;
 
@@ -203,7 +215,7 @@ class _SessionList extends StatelessWidget {
     final items = <Widget>[];
 
     for (int i = 0; i < sessions.length; i++) {
-      if (i == _adIndex) {
+      if (i == _adIndex && adsEnabled) {
         items.add(const _AdSlot());
         items.add(const SizedBox(height: 12));
       }
@@ -636,49 +648,13 @@ class _AdSlot extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: context.colors.borderDefault),
       ),
+      clipBehavior: Clip.hardEdge,
       child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E3A2F),
-                borderRadius: BorderRadius.circular(11),
-              ),
-              child: const Center(
-                child: Icon(Icons.bolt_rounded,
-                    color: Color(0xFF4CD964), size: 24),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Try Lemon Wallet',
-                    style: TextStyle(
-                      fontFamily: '.SF Pro Display',
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: context.colors.textPrimary,
-                    ),
-                  ),
-                  SizedBox(height: 2),
-                  Text(
-                    'Send money — no fees, no signup hassle.',
-                    style: TextStyle(
-                      fontFamily: '.SF Pro Text',
-                      fontSize: 13,
-                      color: context.colors.textSecondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
               decoration: BoxDecoration(
@@ -696,6 +672,8 @@ class _AdSlot extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(height: 8),
+            const Center(child: BannerAdWidget()),
           ],
         ),
       ),
