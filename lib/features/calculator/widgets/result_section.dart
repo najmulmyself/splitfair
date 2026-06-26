@@ -224,12 +224,14 @@ class _PersonResultCard extends StatelessWidget {
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
     Color? cardBg;
-    Color amountColor = context.colors.textPrimary;
     if (isLowest) {
       cardBg = isDark ? const Color(0xFF0D2820) : const Color(0xFFE6FBF5);
     }
     if (isHighest) {
       cardBg = isDark ? const Color(0xFF2A0F18) : const Color(0xFFFFEDF3);
+    }
+    if (result.isFree) {
+      cardBg = isDark ? const Color(0xFF332309) : const Color(0xFFFFF4E3);
     }
 
     return Container(
@@ -238,11 +240,13 @@ class _PersonResultCard extends StatelessWidget {
         color: cardBg ?? context.colors.surface1,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isLowest
-              ? AppColors.emeraldMint.withOpacity(0.25)
-              : isHighest
-                  ? AppColors.coralPink.withOpacity(0.25)
-                  : context.colors.borderDefault,
+          color: result.isFree
+              ? AppColors.warmAmber.withOpacity(0.25)
+              : isLowest
+                  ? AppColors.emeraldMint.withOpacity(0.25)
+                  : isHighest
+                      ? AppColors.coralPink.withOpacity(0.25)
+                      : context.colors.borderDefault,
         ),
       ),
       child: Column(
@@ -322,12 +326,16 @@ class _PersonResultCard extends StatelessWidget {
 
           // Amount
           Text(
-            '$currencySymbol${result.total.toStringAsFixed(2)}',
+            result.isFree
+                ? '🎂 Free!'
+                : '$currencySymbol${result.total.toStringAsFixed(2)}',
             style: TextStyle(
               fontFamily: '.SF Pro Rounded',
-              fontSize: 24,
+              fontSize: result.isFree ? 18 : 24,
               fontWeight: FontWeight.w700,
-              color: context.colors.textPrimary,
+              color: result.isFree
+                  ? AppColors.warmAmber
+                  : context.colors.textPrimary,
             ),
           ),
         ],

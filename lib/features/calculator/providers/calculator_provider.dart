@@ -254,6 +254,13 @@ class CalculatorNotifier extends _$CalculatorNotifier {
     }
   }
 
+  /// Toggles [personId]'s free-diner status. If someone else is currently
+  /// marked free, they are automatically un-marked.
+  void toggleFreeDiner(String personId) {
+    final current = state.freeDinerPersonId;
+    setFreeDiner(current == personId ? null : personId);
+  }
+
   /// Toggles individual tips mode on/off.
   void toggleIndividualTips() {
     final next = !state.useIndividualTips;
@@ -447,6 +454,47 @@ class CalculatorNotifier extends _$CalculatorNotifier {
 
   /// Snapshots the current state as a [SplitSession] (for saving to history).
   SplitSession toSession() => _toSessionSnapshot();
+
+  /// Loads a past [SplitSession] into the calculator as a new, fully
+  /// editable session. Does NOT modify the original history record:
+  /// people receive fresh UUIDs, and itemized assigneeIds are remapped
+  /// to match. Free-diner status never carries over.
+  void loadFromSession(SplitSession session) {
+    final newPeople = _clonePeopleWithNewIds(session.people);
+    final idMap = <String, String>{
+      for (var i = 0; i < session.people.length; i++)
+        session.people[i].id: newPeople[i].id,
+    };
+    state = CalculatorState(
+      subtotal: session.subtotal,
+      tax: session.tax,
+      taxInputMode: TaxInputMode.dollar,
+      tipPercentage: session.tipPercentage,
+      tipOnSubtotal: session.tipOnSubtotal,
+      splitMode: session.splitMode,
+      roundingMode: RoundingMode.none,
+      currencyCode: session.currencyCode,
+      people: newPeople,
+      items: session.items?.map((item) => item.copyWith(
+            assigneeIds:
+                item.assigneeIds.map((id) => idMap[id]!).toList(),
+          )).toList(),
+      sessionLabel: session.label,
+    );
+  }
+
+  /// Generates fresh UUIDs for cloned people so the new session is
+  /// fully independent of the saved history record.
+  List<Person> _clonePeopleWithNewIds(List<Person> original) {
+    return original
+        .map((p) => Person(
+              id: _uuid.v4(),
+              name: p.name,
+              colorIndex: p.colorIndex,
+              shareWeight: p.shareWeight,
+            ))
+        .toList();
+  }
 
   // ── Private helpers ───────────────────────────────────────────
 

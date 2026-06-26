@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../data/models/person.dart';
+import 'free_diner_badge.dart';
 
 /// Horizontal scrollable row of person avatars + the "Add" button.
 class PeopleRow extends StatelessWidget {
@@ -13,6 +14,7 @@ class PeopleRow extends StatelessWidget {
     required this.onAdd,
     required this.onSelect,
     required this.onLongPress,
+    this.freeDinerPersonId,
   });
 
   final List<Person> people;
@@ -21,6 +23,7 @@ class PeopleRow extends StatelessWidget {
   final VoidCallback onAdd;
   final ValueChanged<String> onSelect;
   final ValueChanged<String> onLongPress;
+  final String? freeDinerPersonId;
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +51,7 @@ class PeopleRow extends StatelessWidget {
                 person: person,
                 isActive: isActive,
                 canRemove: canRemove,
+                isFreeDiner: person.id == freeDinerPersonId,
                 onTap: () => onSelect(person.id),
                 onLongPress: () => onLongPress(person.id),
               ).animate(key: ValueKey(person.id)).fade(duration: 250.ms).scale(
@@ -120,6 +124,7 @@ class _PersonAvatar extends StatelessWidget {
     required this.person,
     required this.isActive,
     required this.canRemove,
+    required this.isFreeDiner,
     required this.onTap,
     required this.onLongPress,
   });
@@ -127,6 +132,7 @@ class _PersonAvatar extends StatelessWidget {
   final Person person;
   final bool isActive;
   final bool canRemove;
+  final bool isFreeDiner;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
 
@@ -160,10 +166,12 @@ class _PersonAvatar extends StatelessWidget {
                       end: Alignment.bottomRight,
                     ),
                     border: Border.all(
-                      color: isActive
-                          ? Colors.white.withOpacity(0.85)
-                          : Colors.transparent,
-                      width: 2.5,
+                      color: isFreeDiner
+                          ? AppColors.warmAmber
+                          : isActive
+                              ? Colors.white.withOpacity(0.85)
+                              : Colors.transparent,
+                      width: isFreeDiner ? 2.0 : 2.5,
                     ),
                     boxShadow: isActive
                         ? [
@@ -216,6 +224,13 @@ class _PersonAvatar extends StatelessWidget {
                     ),
                   ),
                 ),
+                // Cake badge — visible when this person is the free diner
+                if (isFreeDiner)
+                  Positioned(
+                    bottom: -3,
+                    right: -3,
+                    child: FreeDinerBadge(key: ValueKey('free_${person.id}')),
+                  ),
               ],
             ),
             const SizedBox(height: 6),

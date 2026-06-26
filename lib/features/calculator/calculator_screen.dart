@@ -286,16 +286,26 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   }
 
   void _onPersonLongPress(String personId) {
-    final people = ref.read(calculatorNotifierProvider).people;
-    if (people.length <= 1) return;
+    final calcState = ref.read(calculatorNotifierProvider);
+    final people = calcState.people;
+    if (people.isEmpty) return;
     Haptics.heavyImpact();
     final person = people.firstWhere((p) => p.id == personId);
+    final isFreeDiner = calcState.freeDinerPersonId == personId;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => _RemovePersonSheet(
         personName: person.name,
         colorIndex: person.colorIndex,
+        canRemove: people.length > 1,
+        isFreeDiner: isFreeDiner,
+        onToggleFreeDiner: () {
+          ref
+              .read(calculatorNotifierProvider.notifier)
+              .toggleFreeDiner(personId);
+          Navigator.pop(ctx);
+        },
         onRemove: () {
           ref.read(calculatorNotifierProvider.notifier).removePerson(personId);
           if (_activePersonId == personId) {
@@ -391,6 +401,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                       people: calcState.people,
                       activePersonId: _activePersonId,
                       canRemove: calcState.people.length > 1,
+                      freeDinerPersonId: calcState.freeDinerPersonId,
                       onAdd: _showAddPersonDialog,
                       onSelect: (id) => setState(() => _activePersonId = id),
                       onLongPress: _onPersonLongPress,
@@ -1050,12 +1061,18 @@ class _RemovePersonSheet extends StatelessWidget {
   const _RemovePersonSheet({
     required this.personName,
     required this.colorIndex,
+    required this.canRemove,
+    required this.isFreeDiner,
+    required this.onToggleFreeDiner,
     required this.onRemove,
     required this.onCancel,
   });
 
   final String personName;
   final int colorIndex;
+  final bool canRemove;
+  final bool isFreeDiner;
+  final VoidCallback onToggleFreeDiner;
   final VoidCallback onRemove;
   final VoidCallback onCancel;
 
@@ -1129,9 +1146,9 @@ class _RemovePersonSheet extends StatelessWidget {
                 // Divider
                 Container(height: 1, color: context.colors.borderDefault),
 
-                // Remove button
+                // Free-diner toggle button
                 GestureDetector(
-                  onTap: onRemove,
+                  onTap: onToggleFreeDiner,
                   behavior: HitTestBehavior.opaque,
                   child: Container(
                     width: double.infinity,
@@ -1139,25 +1156,61 @@ class _RemovePersonSheet extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
-                          Icons.person_remove_rounded,
-                          color: AppColors.coralPink,
-                          size: 18,
+                        const Text(
+                          '🎂',
+                          style: TextStyle(fontSize: 17),
                         ),
                         const SizedBox(width: 8),
-                        const Text(
-                          'Remove from split',
-                          style: TextStyle(
+                        Text(
+                          isFreeDiner
+                              ? 'Remove free status'
+                              : 'Mark as free',
+                          style: const TextStyle(
                             fontFamily: '.SF Pro Text',
                             fontSize: 17,
                             fontWeight: FontWeight.w500,
-                            color: AppColors.coralPink,
+                            color: AppColors.warmAmber,
                           ),
                         ),
                       ],
                     ),
                   ),
                 ),
+
+                if (canRemove) ...[
+                  // Divider
+                  Container(height: 1, color: context.colors.borderDefault),
+
+                  // Remove button
+                  GestureDetector(
+                    onTap: onRemove,
+                    behavior: HitTestBehavior.opaque,
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.person_remove_rounded,
+                            color: AppColors.coralPink,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Remove from split',
+                            style: TextStyle(
+                              fontFamily: '.SF Pro Text',
+                              fontSize: 17,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.coralPink,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

@@ -5,12 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/router/app_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/haptics.dart';
 import '../../data/models/person.dart';
 import '../../data/models/split_result.dart';
 import '../../data/models/split_session.dart';
 import '../../domain/calculators/result_calculator.dart';
+import '../calculator/providers/calculator_provider.dart';
 import 'history_provider.dart';
 
 class HistoryScreen extends ConsumerStatefulWidget {
@@ -69,6 +71,19 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
     );
   }
 
+  void _onDuplicateTapped(SplitSession session) {
+    Haptics.impact();
+    ref.read(calculatorNotifierProvider.notifier).loadFromSession(session);
+    context.go(AppRoutes.calculator);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Loaded from ${DateFormat.yMMMd().format(session.createdAt)} — adjust and split',
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final sessions = ref.watch(historyNotifierProvider);
@@ -97,6 +112,7 @@ class _HistoryScreenState extends ConsumerState<HistoryScreen> {
                             .delete(session.id);
                         _expandedIds.remove(session.id);
                       },
+                      onDuplicate: _onDuplicateTapped,
                     ),
             ),
           ],
@@ -170,6 +186,7 @@ class _SessionList extends StatelessWidget {
     required this.onToggle,
     required this.onConfirmDelete,
     required this.onDelete,
+    required this.onDuplicate,
   });
 
   final List<SplitSession> sessions;
@@ -177,6 +194,7 @@ class _SessionList extends StatelessWidget {
   final ValueChanged<String> onToggle;
   final Future<bool?> Function(SplitSession) onConfirmDelete;
   final ValueChanged<SplitSession> onDelete;
+  final ValueChanged<SplitSession> onDuplicate;
 
   static const _adIndex = 3;
 
@@ -193,10 +211,26 @@ class _SessionList extends StatelessWidget {
       items.add(
         Dismissible(
           key: ValueKey(session.id),
-          direction: DismissDirection.endToStart,
-          confirmDismiss: (_) => onConfirmDelete(session),
+          direction: DismissDirection.horizontal,
+          confirmDismiss: (direction) async {
+            if (direction == DismissDirection.startToEnd) {
+              onDuplicate(session);
+              return false;
+            }
+            return onConfirmDelete(session);
+          },
           onDismissed: (_) => onDelete(session),
           background: Container(
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.only(left: 20),
+            decoration: BoxDecoration(
+              color: AppColors.primaryViolet.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(Icons.copy_rounded,
+                color: AppColors.primaryViolet, size: 24),
+          ),
+          secondaryBackground: Container(
             alignment: Alignment.centerRight,
             padding: const EdgeInsets.only(right: 20),
             decoration: BoxDecoration(
