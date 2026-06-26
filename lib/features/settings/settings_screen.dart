@@ -125,6 +125,16 @@ class SettingsScreen extends ConsumerWidget {
                       onTap: () => _openUrl('https://najmulmyself.github.io/splitfair/privacy'),
                     ),
                   ]),
+                  const SizedBox(height: 20),
+                  _SectionLabel('MORE APPS'),
+                  _SettingsCard(children: [
+                    _NavRow(
+                      label: 'More apps from us',
+                      onTap: () => _openUrl(
+                        'https://itunes.apple.com/WebObjects/MZStore.woa/wa/viewSoftware?id=6775596264&mt=8&action=view-other-apps',
+                      ),
+                    ),
+                  ]),
                   const SizedBox(height: 24),
                 ],
               ),
