@@ -131,7 +131,7 @@ class SettingsScreen extends ConsumerWidget {
                     _NavRow(
                       label: 'More apps from us',
                       onTap: () => _openUrl(
-                        'https://itunes.apple.com/WebObjects/MZStore.woa/wa/viewSoftware?id=6775596264&mt=8&action=view-other-apps',
+                        'https://apps.apple.com/us/developer/md-najmul-huda/id6775596266',
                       ),
                     ),
                   ]),
